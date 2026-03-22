@@ -139,7 +139,7 @@ def main():
                 print("------")
 
         print("Path:", result.path)
-        print("Steps:", len(result.path))
+        print("Steps:", len(result.path) - 1)
 
     elif choice == '8':
         algo = IDAStarSearch(start, goal, puzzle)
@@ -171,6 +171,8 @@ def main():
                     print("CUT OFF (f > f_limit)")
 
                 print("------")
+        print("\nFinal Path:", result.path)
+        print("Steps:", len(result.path) - 1)
 
 if __name__ == "__main__":
     try:

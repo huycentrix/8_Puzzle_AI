@@ -7,22 +7,22 @@ class SearchResult:
     Lớp lưu trữ kết quả sau khi thực hiện thuật toán tìm kiếm.
     """
     def __init__(self):
-        # Danh sách các trạng thái tạo thành đường đi từ Start đến Goal [cite: 118]
+        # Danh sách các trạng thái tạo thành đường đi từ Start đến Goal
         self.path = []
         
-        # Danh sách tất cả các trạng thái đã bị lấy ra khỏi Frontier (đã duyệt) [cite: 118]
+        # Danh sách tất cả các trạng thái đã bị lấy ra khỏi Frontier (đã duyệt) 
         self.explored_nodes = []
         
-        # Tổng chi phí đường đi (trong 8-puzzle thường là số bước di chuyển) [cite: 118]
+        # Tổng chi phí đường đi (trong 8-puzzle thường là số bước di chuyển)
         self.path_cost = 0.0
         
-        # Thời gian thực thi thuật toán (tính bằng giây) [cite: 118]
+        # Thời gian thực thi thuật toán (tính bằng giây) 
         self.processing_time = 0.0
         
-        # Trạng thái tìm kiếm thành công hay thất bại [cite: 118]
+        # Trạng thái tìm kiếm thành công hay thất bại
         self.success = False
         
-        # Lưu trữ chi tiết từng bước (current node, frontier,...) để minh họa thuật toán [cite: 118]
+        # Lưu trữ chi tiết từng bước (current node, frontier,...) để minh họa thuật toán 
         self.steps = []
 
 
