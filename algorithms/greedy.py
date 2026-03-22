@@ -26,8 +26,15 @@ class GreedyBestFirstSearch(BaseSearch):
             current = heapq.heappop(frontier)
 
             result.explored_nodes.append(current.state)
-
+            
             if current.state == self.goal_state:
+                result.steps.append({
+                    "current": current.state,
+                    "h": current.h,
+                    "frontier": [],
+                    "is_goal": True
+                })
+                
                 result.path, result.path_cost = self.extract_path(current)
                 result.success = True
                 break
@@ -39,6 +46,14 @@ class GreedyBestFirstSearch(BaseSearch):
                     h = self.puzzle.heuristic(state)
                     neighbor = Node(state, current, cost=0, heuristic=h)
                     heapq.heappush(frontier, neighbor)
+
+            #LƯU STEP
+            result.steps.append({
+                "current": current.state,
+                "h": current.h,
+                "frontier": [{"state": node.state,"h": node.h} for node in frontier],
+                "is_goal": False
+            })
 
         result.processing_time = time.time() - start_time
         return result

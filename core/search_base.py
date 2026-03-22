@@ -9,6 +9,7 @@ class SearchResult:
         self.path_cost = 0.0
         self.processing_time = 0.0
         self.success = False
+        self.steps = []
 
 
 class BaseSearch(ABC):
