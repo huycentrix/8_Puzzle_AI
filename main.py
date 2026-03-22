@@ -2,6 +2,7 @@ from puzzle.puzzle import Puzzle
 from algorithms.greedy import GreedyBestFirstSearch
 from algorithms.idastar import IDAStarSearch
 from algorithms.ucs import UniformCostSearch
+from algorithms.astar import AStarSearch
 
 def main():
     start = (
@@ -43,6 +44,7 @@ def main():
         print("1")
 
     elif choice == '3':
+        print("RUNNING UCS")
         algo = UniformCostSearch(start, goal, puzzle)
         result = algo.search()
 
@@ -76,7 +78,41 @@ def main():
             print(f"  Move {i}:")
             for row in state:
                 print("   ", row)
+    elif choice == '4':
+        print("RUNNING A* SEARCH")
+        algo = AStarSearch(start, goal, puzzle)
+        result = algo.search()
 
+        for i, step in enumerate(result.steps):
+            print(f"\n===== Step {i+1} =====")
+
+            print("Current:")
+            for row in step["current"]:
+                print(row)
+
+            print(f"g(n) = {step['g']},  h(n) = {step['h']},  f(n) = {step['f']}")
+
+            if step["is_goal"]:
+                print("GOAL FOUND!")
+
+            print("\nFrontier:")
+            for node in step["frontier"]:
+                print("State:")
+                for row in node["state"]:
+                    print(row)
+                print(f"g = {node['g']},  h = {node['h']},  f = {node['f']}")
+                print("------")
+
+        print("\n========== RESULT ==========")
+        print("Path found :", result.success)
+        print("Path cost  :", result.path_cost)
+        print("Total steps:", len(result.path))
+        print("Time (s)   :", round(result.processing_time, 6))
+        print("\nSolution path:")
+        for i, state in enumerate(result.path):
+            print(f"  Move {i}:")
+            for row in state:
+                print("   ", row)
     elif choice == '7':
         print("RUNNING GREEDY BEST-FIRST SEARCH (GBFS)")
         algo = GreedyBestFirstSearch(start, goal, puzzle)
