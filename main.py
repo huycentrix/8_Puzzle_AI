@@ -1,5 +1,6 @@
 from puzzle.puzzle import Puzzle
 from algorithms.greedy import GreedyBestFirstSearch
+from algorithms.idastar import IDAStarSearch
 from algorithms.ucs import UniformCostSearch
 
 def main():
@@ -103,6 +104,37 @@ def main():
 
         print("Path:", result.path)
         print("Steps:", len(result.path))
+
+    elif choice == '8':
+        algo = IDAStarSearch(start, goal, puzzle)
+        result = algo.search()
+
+        # in step-by-step
+        for i, step in enumerate(result.steps):
+            print(f"\n===== Step {i+1} =====")
+
+            print("Current:")
+            for row in step["current"]:
+                print(row)
+
+            print(f"g={step['g']}, h={step['h']}, f={step['f']}, f_limit={step['f_limit']}")
+
+            if step["is_goal"]:
+                print("GOAL FOUND!")
+
+            print("\nFrontier (successors):")
+            for node in step["frontier"]:
+                print("State:")
+                for row in node["state"]:
+                    print(row)
+
+                print(f"g={node['g']}, h={node['h']}, f={node['f']}")
+
+                # highlight nếu bị cắt
+                if node["f"] > step["f_limit"]:
+                    print("CUT OFF (f > f_limit)")
+
+                print("------")
 
 if __name__ == "__main__":
     try:
