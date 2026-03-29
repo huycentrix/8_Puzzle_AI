@@ -77,6 +77,25 @@ class PuzzleBridge(QObject):
         self.node_positions[node_key] = (x, y)
         return node_key, x, y
 
+    def place_children_symmetrically(self, parent_key, children_info):
+        if not parent_key or parent_key not in self.node_positions or not children_info:
+            return
+
+        parent_x, parent_y = self.node_positions[parent_key]
+        spacing = 420
+        total = len(children_info)
+        start_x = parent_x - ((total - 1) * spacing) / 2
+        y = int(parent_y + self.level_height)
+
+        ordered_keys = []
+        for index, child_info in enumerate(children_info):
+            child_key = self.state_key(child_info["flat_state"])
+            x = int(start_x + index * spacing)
+            self.node_positions[child_key] = (x, y)
+            ordered_keys.append(child_key)
+
+        self.rendered_children[parent_key] = ordered_keys
+
     def build_visual_node(self, node_info, status, parent_key="", is_goal=False):
         node_key, x, y = self.ensure_node_position(node_info, parent_key)
         return {
@@ -162,6 +181,7 @@ class PuzzleBridge(QObject):
             parent_key,
             step.get("is_goal", False),
         )
+        self.place_children_symmetrically(current_node["id"], step.get("children", []))
         children = [
             self.build_visual_node(child_info, "frontier", current_node["id"], False)
             for child_info in step.get("children", [])
