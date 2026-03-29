@@ -315,7 +315,7 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
-                    contentWidth: 3600
+                    contentWidth: 5200
                     contentHeight: 12000
                     boundsBehavior: Flickable.StopAtBounds
                     Behavior on contentX { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }

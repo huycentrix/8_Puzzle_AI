@@ -21,7 +21,7 @@ class PuzzleBridge(QObject):
         self.PuzzleClass = puzzle_class
         self.timer = QTimer()
         self.timer.timeout.connect(self.show_next_step)
-        self.canvas_width = 3600
+        self.canvas_width = 5200
         self.level_height = 250
         self.reset_runtime()
 
@@ -67,7 +67,7 @@ class PuzzleBridge(QObject):
                 siblings.append(node_key)
             sibling_index = siblings.index(node_key)
             sibling_count = len(siblings)
-            spacing = 180
+            spacing = 280
             x = int(parent_x - ((sibling_count - 1) * spacing) / 2 + sibling_index * spacing)
             y = int(parent_y + self.level_height)
         else:
