@@ -73,12 +73,12 @@ ApplicationWindow {
         const payload = {
             nodeId: nodeInfo.id,
             parentId: nodeInfo.parentId,
-            flatState: nodeInfo.flatState,
+            flatState: cloneState(nodeInfo.flatState),
             g: nodeInfo.g,
             h: nodeInfo.h,
             f: nodeInfo.f,
-            x: nodeInfo.x,
-            y: nodeInfo.y,
+            nodeX: nodeInfo.x,
+            nodeY: nodeInfo.y,
             status: nodeInfo.status
         }
 
@@ -354,10 +354,10 @@ ApplicationWindow {
                                         continue
                                     }
 
-                                    const startX = parentNode.x + 74
-                                    const startY = parentNode.y + 148
-                                    const endX = childNode.x + 74
-                                    const endY = childNode.y
+                                    const startX = parentNode.nodeX + 74
+                                    const startY = parentNode.nodeY + 148
+                                    const endX = childNode.nodeX + 74
+                                    const endY = childNode.nodeY
 
                                     ctx.beginPath()
                                     ctx.moveTo(startX, startY)
@@ -379,10 +379,10 @@ ApplicationWindow {
                         Repeater {
                             model: nodeModel
                             delegate: PuzzleNode {
-                                x: model.x
-                                y: model.y
+                                x: nodeX
+                                y: nodeY
                                 z: 1
-                                nodeData: model.flatState
+                                nodeData: flatState
                                 g: model.g
                                 h: model.h
                                 f: model.f
