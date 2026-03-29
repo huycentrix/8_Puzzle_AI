@@ -25,6 +25,8 @@ ApplicationWindow {
     property string currentNodeId: ""
     property int lastIdaIteration: -1
     property real lastIdaFLimit: -1
+    property bool showUnsolvableBanner: false
+    property string unsolvableMessage: ""
 
     function cloneState(state) { return state.slice(0) }
     function stateId(state) { return state.join(",") }
@@ -63,6 +65,8 @@ ApplicationWindow {
         currentNodeId = ""
         lastIdaIteration = -1
         lastIdaFLimit = -1
+        showUnsolvableBanner = false
+        unsolvableMessage = ""
         previewState = cloneState(startState)
         statusText = "Ready"
         processingTimeText = "0 ms"
@@ -219,6 +223,48 @@ ApplicationWindow {
                     spacing: 18
 
                     Text { text: "Configuration"; font.pixelSize: 22; font.bold: true; color: "#0f172a" }
+
+                    Rectangle {
+                        Layout.fillWidth: true
+                        visible: showUnsolvableBanner
+                        color: "#fff1f2"
+                        border.color: "#ef4444"
+                        radius: 12
+                        implicitHeight: bannerColumn.implicitHeight + 20
+
+                        ColumnLayout {
+                            id: bannerColumn
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            spacing: 8
+
+                            Text {
+                                text: "Unsolvable Problem"
+                                font.pixelSize: 14
+                                font.bold: true
+                                color: "#b91c1c"
+                            }
+
+                            Text {
+                                Layout.fillWidth: true
+                                wrapMode: Text.WordWrap
+                                text: unsolvableMessage
+                                color: "#7f1d1d"
+                            }
+
+                            Button {
+                                text: "Randomize New State"
+                                onClicked: {
+                                    startState = backend.randomize_state(goalState, 60)
+                                    previewState = cloneState(startState)
+                                    showUnsolvableBanner = false
+                                    unsolvableMessage = ""
+                                    statusText = "Ready"
+                                }
+                            }
+                        }
+                    }
+
                     Text { text: "Start State"; font.pixelSize: 14; font.bold: true; color: "#334155" }
                     BoardView { Layout.alignment: Qt.AlignHCenter; boardState: root.startState; editable: true }
 
@@ -230,6 +276,9 @@ ApplicationWindow {
                             onClicked: {
                                 startState = backend.randomize_state(goalState, 60)
                                 previewState = cloneState(startState)
+                                showUnsolvableBanner = false
+                                unsolvableMessage = ""
+                                statusText = "Ready"
                             }
                         }
                         Button {
@@ -238,6 +287,9 @@ ApplicationWindow {
                             onClicked: {
                                 startState = [1, 2, 3, 4, 0, 5, 7, 8, 6]
                                 previewState = cloneState(startState)
+                                showUnsolvableBanner = false
+                                unsolvableMessage = ""
+                                statusText = "Ready"
                             }
                         }
                     }
@@ -546,6 +598,8 @@ ApplicationWindow {
 
         function onSearchError(message) {
             statusText = "Error"
+            showUnsolvableBanner = true
+            unsolvableMessage = message + " Please randomize a new initial state or edit the board."
             appendLog("ERROR", message)
         }
     }
