@@ -67,7 +67,7 @@ class PuzzleBridge(QObject):
                 siblings.append(node_key)
             sibling_index = siblings.index(node_key)
             sibling_count = len(siblings)
-            spacing = 350
+            spacing = 200
             x = int(parent_x - ((sibling_count - 1) * spacing) / 2 + sibling_index * spacing)
             y = int(parent_y + self.level_height)
         else:
