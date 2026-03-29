@@ -76,12 +76,12 @@ ApplicationWindow {
             nodeId: nodeInfo.id,
             parentId: nodeInfo.parentId,
             flatStateJson: JSON.stringify(nodeInfo.flatState),
-            g: nodeInfo.g,
-            h: nodeInfo.h,
-            f: nodeInfo.f,
+            nodeG: nodeInfo.g,
+            nodeH: nodeInfo.h,
+            nodeF: nodeInfo.f,
             nodeX: nodeInfo.x,
             nodeY: nodeInfo.y,
-            status: nodeInfo.status
+            nodeStatus: nodeInfo.status
         }
 
         if (index === -1) {
@@ -385,10 +385,10 @@ ApplicationWindow {
                                 y: nodeY
                                 z: 1
                                 nodeData: JSON.parse(flatStateJson)
-                                g: g
-                                h: h
-                                f: f
-                                status: status
+                                g: nodeG
+                                h: nodeH
+                                f: nodeF
+                                status: nodeStatus
                                 onHovered: root.previewState = state
                             }
                         }
@@ -486,8 +486,8 @@ ApplicationWindow {
         function onStepUpdated(stepData) {
             if (currentNodeId !== "") {
                 const previousIndex = nodeIndexById(currentNodeId)
-                if (previousIndex !== -1 && nodeModel.get(previousIndex).status === "current") {
-                    nodeModel.setProperty(previousIndex, "status", "explored")
+                if (previousIndex !== -1 && nodeModel.get(previousIndex).nodeStatus === "current") {
+                    nodeModel.setProperty(previousIndex, "nodeStatus", "explored")
                 }
             }
 
@@ -517,7 +517,7 @@ ApplicationWindow {
             for (let i = 0; i < summary.pathIds.length; i += 1) {
                 const idx = nodeIndexById(summary.pathIds[i])
                 if (idx !== -1) {
-                    nodeModel.setProperty(idx, "status", "path")
+                    nodeModel.setProperty(idx, "nodeStatus", "path")
                 }
             }
 
