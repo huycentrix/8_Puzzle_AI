@@ -27,9 +27,11 @@ ApplicationWindow {
     property real lastIdaFLimit: -1
     property bool showUnsolvableBanner: false
     property string unsolvableMessage: ""
+    property bool currentStateSolvable: true
 
     function cloneState(state) { return state.slice(0) }
     function stateId(state) { return state.join(",") }
+    function refreshSolvableStatus() { currentStateSolvable = backend.is_solvable_state(startState, goalState) }
 
     function nodeIndexById(nodeId) {
         for (let i = 0; i < nodeModel.count; i += 1) {
@@ -68,6 +70,7 @@ ApplicationWindow {
         showUnsolvableBanner = false
         unsolvableMessage = ""
         previewState = cloneState(startState)
+        refreshSolvableStatus()
         statusText = "Ready"
         processingTimeText = "0 ms"
         pathCostText = "0"
@@ -128,6 +131,7 @@ ApplicationWindow {
         nextState[index] = 0
         startState = nextState
         previewState = cloneState(nextState)
+        refreshSolvableStatus()
     }
 
     component BoardTile : Rectangle {
@@ -226,6 +230,47 @@ ApplicationWindow {
 
                     Rectangle {
                         Layout.fillWidth: true
+                        radius: 12
+                        color: currentStateSolvable ? "#ecfdf5" : "#fff1f2"
+                        border.color: currentStateSolvable ? "#10b981" : "#ef4444"
+                        implicitHeight: 54
+
+                        RowLayout {
+                            anchors.fill: parent
+                            anchors.leftMargin: 12
+                            anchors.rightMargin: 12
+                            spacing: 10
+
+                            Rectangle {
+                                width: 10
+                                height: 10
+                                radius: 5
+                                color: currentStateSolvable ? "#10b981" : "#ef4444"
+                            }
+
+                            ColumnLayout {
+                                spacing: 2
+
+                                Text {
+                                    text: currentStateSolvable ? "Solvable" : "Unsolvable"
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                    color: currentStateSolvable ? "#065f46" : "#b91c1c"
+                                }
+
+                                Text {
+                                    text: currentStateSolvable
+                                        ? "This initial state can reach the goal."
+                                        : "This initial state cannot reach the goal."
+                                    font.pixelSize: 12
+                                    color: currentStateSolvable ? "#047857" : "#7f1d1d"
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle {
+                        Layout.fillWidth: true
                         visible: showUnsolvableBanner
                         color: "#fff1f2"
                         border.color: "#ef4444"
@@ -257,6 +302,7 @@ ApplicationWindow {
                                 onClicked: {
                                     startState = backend.randomize_state(goalState, 60)
                                     previewState = cloneState(startState)
+                                    refreshSolvableStatus()
                                     showUnsolvableBanner = false
                                     unsolvableMessage = ""
                                     statusText = "Ready"
@@ -276,6 +322,7 @@ ApplicationWindow {
                             onClicked: {
                                 startState = backend.randomize_state(goalState, 60)
                                 previewState = cloneState(startState)
+                                refreshSolvableStatus()
                                 showUnsolvableBanner = false
                                 unsolvableMessage = ""
                                 statusText = "Ready"
@@ -287,6 +334,7 @@ ApplicationWindow {
                             onClicked: {
                                 startState = [1, 2, 3, 4, 0, 5, 7, 8, 6]
                                 previewState = cloneState(startState)
+                                refreshSolvableStatus()
                                 showUnsolvableBanner = false
                                 unsolvableMessage = ""
                                 statusText = "Ready"
@@ -336,6 +384,7 @@ ApplicationWindow {
                         Button {
                             Layout.fillWidth: true
                             text: "Run Search"
+                            enabled: currentStateSolvable
                             onClicked: {
                                 backend.start_search(algorithmBox.currentText, startState, goalState, speedSlider.value, heuristicBox.currentText)
                             }
@@ -529,7 +578,10 @@ ApplicationWindow {
         }
     }
 
-    Component.onCompleted: appendLog("INFO", "Ready to run 8-puzzle search.")
+    Component.onCompleted: {
+        appendLog("INFO", "Ready to run 8-puzzle search.")
+        refreshSolvableStatus()
+    }
 
     Connections {
         target: backend

@@ -118,6 +118,13 @@ class PuzzleBridge(QObject):
         randomized = puzzle_logic.randomize(goal_state, moves)
         return self.flatten_state(randomized)
 
+    @Slot(list, list, result=bool)
+    def is_solvable_state(self, start_list, goal_list):
+        start_state = tuple(tuple(start_list[i:i + 3]) for i in range(0, 9, 3))
+        goal_state = tuple(tuple(goal_list[i:i + 3]) for i in range(0, 9, 3))
+        puzzle_logic = self.PuzzleClass(goal_state)
+        return puzzle_logic.is_solvable(start_state)
+
     @Slot()
     def stop_playback(self):
         self.timer.stop()
