@@ -22,6 +22,7 @@ ApplicationWindow {
     property string frontierPeakText: "0"
     property string solutionDepthText: "0"
     property string currentFrontierText: "0"
+    property string currentNodeId: ""
 
     function cloneState(state) { return state.slice(0) }
     function stateId(state) { return state.join(",") }
@@ -57,6 +58,7 @@ ApplicationWindow {
         nodeModel.clear()
         edgeModel.clear()
         logModel.clear()
+        currentNodeId = ""
         previewState = cloneState(startState)
         statusText = "Ready"
         processingTimeText = "0 ms"
@@ -354,9 +356,9 @@ ApplicationWindow {
                                         continue
                                     }
 
-                                    const startX = parentNode.nodeX + 74
-                                    const startY = parentNode.nodeY + 148
-                                    const endX = childNode.nodeX + 74
+                                    const startX = parentNode.nodeX + 56
+                                    const startY = parentNode.nodeY + 112
+                                    const endX = childNode.nodeX + 56
                                     const endY = childNode.nodeY
 
                                     ctx.beginPath()
@@ -482,11 +484,20 @@ ApplicationWindow {
         }
 
         function onStepUpdated(stepData) {
+            if (currentNodeId !== "") {
+                const previousIndex = nodeIndexById(currentNodeId)
+                if (previousIndex !== -1 && nodeModel.get(previousIndex).status === "current") {
+                    nodeModel.setProperty(previousIndex, "status", "explored")
+                }
+            }
+
+            stepData.currentNode.status = "current"
             upsertNode(stepData.currentNode)
             for (let i = 0; i < stepData.children.length; i += 1) {
                 upsertNode(stepData.children[i])
             }
 
+            currentNodeId = stepData.currentNode.id
             previewState = cloneState(stepData.currentNode.flatState)
             exploredCountText = stepData.exploredCount.toString()
             currentFrontierText = stepData.frontierCount.toString()
