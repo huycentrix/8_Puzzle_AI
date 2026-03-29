@@ -146,6 +146,7 @@ ApplicationWindow {
     }
 
     component BoardView : Rectangle {
+        id: boardView
         property var boardState: []
         property bool editable: false
 
@@ -166,8 +167,8 @@ ApplicationWindow {
                     width: 60
                     height: 60
                     tileIndex: index
-                    editable: parent.parent.parent.editable
-                    value: parent.parent.parent.boardState[index]
+                    editable: boardView.editable
+                    value: boardView.boardState[index]
                 }
             }
         }
