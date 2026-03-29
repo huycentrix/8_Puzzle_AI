@@ -30,17 +30,18 @@ Item {
                 spacing: 0
 
                 Repeater {
-                    model: root.nodeData
+                    model: root.nodeData ? root.nodeData.length : 0
                     delegate: Rectangle {
+                        property int tileValue: root.nodeData[index]
                         width: 34
                         height: 34
                         border.width: 1
                         border.color: "#94a3b8"
-                        color: modelData === 0 ? "#e2e8f0" : "transparent"
+                        color: tileValue === 0 ? "#e2e8f0" : "transparent"
 
                         Text {
                             anchors.centerIn: parent
-                            text: modelData === 0 ? "" : modelData
+                            text: tileValue === 0 ? "" : tileValue
                             font.pixelSize: 16
                             font.bold: true
                             color: "#0f172a"
