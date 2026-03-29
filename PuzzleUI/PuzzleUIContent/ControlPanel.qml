@@ -7,6 +7,9 @@ Item {
     id: controlPanelRoot
     width: 540
     height: 68
+    property var configPanelRef
+    property var puzzleBoardRef
+    property var metricsRef
 
     MultiEffect {
         source: backgroundRect
@@ -56,8 +59,11 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     onClicked: {
-                        let method = mainScreen.configPanel.selectedAlgorithm
-                        let currentStatus = mainScreen.puzzleBoard.puzzleModel
+                        if (!configPanelRef || !puzzleBoardRef) {
+                            return
+                        }
+                        let method = configPanelRef.selectedAlgorithm
+                        let currentStatus = puzzleBoardRef.puzzleModel
                         let goal = [1, 2, 3, 4, 5, 6, 7, 8, 0]
                         backend.start_search(method, currentStatus, goal, speedSlider.value)
                     }
@@ -124,14 +130,18 @@ Item {
         target: backend
 
         function onStepUpdated(stepData) {
-            mainScreen.puzzleBoard.puzzleModel = stepData.currentNode.flatState
-            mainScreen.metrics.totalSteps = stepData.stepNumber.toString()
-            mainScreen.metrics.nodesExpanded = stepData.nodesExpanded.toLocaleString()
+            if (puzzleBoardRef) {
+                puzzleBoardRef.puzzleModel = stepData.currentNode.flatState
+            }
+            if (metricsRef) {
+                metricsRef.totalSteps = stepData.stepNumber.toString()
+                metricsRef.nodesExpanded = stepData.nodesExpanded.toLocaleString()
+            }
         }
 
         function onSearchFinished(success, pathIds) {
-            if (success) {
-                mainScreen.metrics.solutionDepth = Math.max(0, pathIds.length - 1).toString()
+            if (success && metricsRef) {
+                metricsRef.solutionDepth = Math.max(0, pathIds.length - 1).toString()
             }
         }
     }

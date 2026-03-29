@@ -118,6 +118,9 @@ Rectangle {
     }
 
     ControlPanel {
+        configPanelRef: configPanelId
+        puzzleBoardRef: puzzleBoardId
+        metricsRef: metricsPanel
         anchors.bottom: parent.bottom
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: 20
