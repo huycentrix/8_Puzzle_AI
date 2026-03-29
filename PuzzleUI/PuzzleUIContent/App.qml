@@ -73,7 +73,7 @@ ApplicationWindow {
         const payload = {
             nodeId: nodeInfo.id,
             parentId: nodeInfo.parentId,
-            flatState: cloneState(nodeInfo.flatState),
+            flatStateJson: JSON.stringify(nodeInfo.flatState),
             g: nodeInfo.g,
             h: nodeInfo.h,
             f: nodeInfo.f,
@@ -382,11 +382,11 @@ ApplicationWindow {
                                 x: nodeX
                                 y: nodeY
                                 z: 1
-                                nodeData: flatState
-                                g: model.g
-                                h: model.h
-                                f: model.f
-                                status: model.status
+                                nodeData: JSON.parse(flatStateJson)
+                                g: g
+                                h: h
+                                f: f
+                                status: status
                                 onHovered: root.previewState = state
                             }
                         }
