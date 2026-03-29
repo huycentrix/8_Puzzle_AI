@@ -12,9 +12,11 @@
         <file>PuzzleUIContent/MaterialIcon.qml</file>
         <file>PuzzleUIContent/MetricsPanel.qml</file>
         <file>PuzzleUIContent/PuzzleGrid.qml</file>
+        <file>PuzzleUIContent/PuzzleNode.qml</file>
         <file>PuzzleUIContent/Screen01.ui.qml</file>
         <file>PuzzleUIContent/SidebarButton.qml</file>
         <file>PuzzleUIContent/SideButton.qml</file>
+        <file>PuzzleUIContent/TreeView.qml</file>
         <file>qtquickcontrols2.conf</file>
     </qresource>
 </RCC>
