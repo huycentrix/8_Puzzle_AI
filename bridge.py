@@ -82,7 +82,7 @@ class PuzzleBridge(QObject):
             return
 
         parent_x, parent_y = self.node_positions[parent_key]
-        spacing = 420
+        spacing = 280
         total = len(children_info)
         start_x = parent_x - ((total - 1) * spacing) / 2
         y = int(parent_y + self.level_height)
