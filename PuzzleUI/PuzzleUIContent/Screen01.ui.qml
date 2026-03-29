@@ -39,18 +39,19 @@ Rectangle {
             Item { Layout.fillHeight: true }
         }
 
-        ScrollView {
+        Flickable {
             id: treeScrollView
             Layout.fillWidth: true
             Layout.fillHeight: true
             clip: true
-            ScrollBar.horizontal.policy: ScrollBar.AsNeeded
-            ScrollBar.vertical.policy: ScrollBar.AsNeeded
+            boundsBehavior: Flickable.StopAtBounds
+            contentWidth: treeContent.width
+            contentHeight: treeContent.height
 
             Item {
                 id: treeContent
-                width: 8000
-                height: 8000
+                width: 2400
+                height: 12000
 
                 Canvas {
                     id: treeCanvas
@@ -98,6 +99,14 @@ Rectangle {
                         }
                     }
                 }
+            }
+
+            ScrollBar.vertical: ScrollBar {
+                policy: ScrollBar.AsNeeded
+            }
+
+            ScrollBar.horizontal: ScrollBar {
+                policy: ScrollBar.AsNeeded
             }
         }
 

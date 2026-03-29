@@ -23,7 +23,7 @@ class PuzzleBridge(QObject):
         self.all_steps = []
         self.path_ids = []
         self.current_step_idx = 0
-        self.canvas_width = 8000
+        self.canvas_width = 2400
         self.level_height = 250
         self.node_positions = {}
         self.rendered_children = {}

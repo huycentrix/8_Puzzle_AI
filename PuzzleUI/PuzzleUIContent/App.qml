@@ -112,10 +112,16 @@ Window {
             }
 
             var current = stepData.currentNode
-            var vPos = (current.y / mainScreen.treeContainer.height) - 0.15
-            var hPos = (current.x / mainScreen.treeContainer.width) - 0.5
-            mainScreen.treeScrollView.ScrollBar.vertical.position = Math.max(0, Math.min(1, vPos))
-            mainScreen.treeScrollView.ScrollBar.horizontal.position = Math.max(0, Math.min(1, hPos))
+            var targetY = Math.max(0, current.y - 120)
+            var targetX = Math.max(0, current.x - (mainScreen.treeScrollView.width / 2))
+            mainScreen.treeScrollView.contentY = Math.min(
+                targetY,
+                Math.max(0, mainScreen.treeScrollView.contentHeight - mainScreen.treeScrollView.height)
+            )
+            mainScreen.treeScrollView.contentX = Math.min(
+                targetX,
+                Math.max(0, mainScreen.treeScrollView.contentWidth - mainScreen.treeScrollView.width)
+            )
 
             mainScreen.logList.appendLog(
                 "STEP " + stepData.stepNumber,
