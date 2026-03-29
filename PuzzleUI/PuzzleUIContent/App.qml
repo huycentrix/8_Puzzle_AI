@@ -199,7 +199,7 @@ ApplicationWindow {
         spacing: 16
 
         Rectangle {
-            Layout.preferredWidth: 340
+            Layout.preferredWidth: 300
             Layout.fillHeight: true
             radius: 18
             color: "#ffffff"
@@ -401,7 +401,7 @@ ApplicationWindow {
         }
 
         Rectangle {
-            Layout.preferredWidth: 320
+            Layout.preferredWidth: 280
             Layout.fillHeight: true
             radius: 18
             color: "#ffffff"
