@@ -23,6 +23,8 @@ ApplicationWindow {
     property string solutionDepthText: "0"
     property string currentFrontierText: "0"
     property string currentNodeId: ""
+    property int lastIdaIteration: -1
+    property real lastIdaFLimit: -1
 
     function cloneState(state) { return state.slice(0) }
     function stateId(state) { return state.join(",") }
@@ -59,6 +61,8 @@ ApplicationWindow {
         edgeModel.clear()
         logModel.clear()
         currentNodeId = ""
+        lastIdaIteration = -1
+        lastIdaFLimit = -1
         previewState = cloneState(startState)
         statusText = "Ready"
         processingTimeText = "0 ms"
@@ -502,7 +506,22 @@ ApplicationWindow {
             exploredCountText = stepData.exploredCount.toString()
             currentFrontierText = stepData.frontierCount.toString()
             statusText = stepData.isGoal ? "Goal found" : "Running"
-            appendLog("STEP " + stepData.stepNumber, "Expanded " + stepData.currentNode.id + " and generated " + stepData.children.length + " child nodes.")
+            if (algorithmBox.currentText === "Iterative Deepening A* (IDA*)") {
+                if (stepData.meta.iteration !== lastIdaIteration) {
+                    if (lastIdaIteration !== -1) {
+                        appendLog("IDA*", "Update f_limit: " + lastIdaFLimit + " -> " + stepData.meta.fLimit)
+                    }
+                    lastIdaIteration = stepData.meta.iteration
+                    lastIdaFLimit = stepData.meta.fLimit
+                    appendLog("IDA* LOOP", "Iteration " + stepData.meta.iteration + " with f_limit = " + stepData.meta.fLimit)
+                }
+                appendLog(
+                    "STEP " + stepData.stepNumber,
+                    "Expand " + stepData.currentNode.id + " with f=" + stepData.currentNode.f + ", g=" + stepData.currentNode.g + ", h=" + stepData.currentNode.h + ", f_limit=" + stepData.meta.fLimit
+                )
+            } else {
+                appendLog("STEP " + stepData.stepNumber, "Expanded " + stepData.currentNode.id + " and generated " + stepData.children.length + " child nodes.")
+            }
             scrollToNode(stepData.currentNode)
         }
 
