@@ -4,131 +4,114 @@ import QtQuick.Controls
 
 Rectangle {
     id: screen
+    property alias configPanel: configPanelId
+    property alias treeContainer: treeContent
+    property alias treeScrollView: treeScrollView
+    property alias treeCanvas: treeCanvas
+    property alias metrics: metricsPanel
+    property alias logList: executionLog
+    property alias puzzleBoard: puzzleBoardId
+    property var nodeMap: ({})
+    property var edgeMap: ({})
+
     width: 1440
     height: 810
-    color: "#f8f9ff"
+    color: "#ffffff"
 
     RowLayout {
-        id: mainLayout
         anchors.fill: parent
         spacing: 0
 
-        // --- CỘT 0: SideBar (Rộng 210) ---
-        Rectangle {
-            id: sideBar
-            Layout.preferredWidth: 210
-            Layout.minimumWidth: 210
+        ColumnLayout {
+            Layout.preferredWidth: 300
             Layout.fillHeight: true
-            color: "#eff4ff"
-            ColumnLayout {
+            Layout.margins: 20
 
-                anchors.fill: parent
-
-                anchors.margins: 19 // 25 * 0.75
-
-                spacing: 8 // 10 * 0.75
-
-                SideButton {
-
-                    Layout.fillWidth: true
-
-                    text: "Algorithm"
-
-                    iconCode: "\ue871"
-                }
-
-                SideButton {
-
-                    Layout.fillWidth: true
-
-                    text: "Puzzle Setup"
-
-                    iconCode: "\uf1b4"
-
-                    isActive: true
-                }
-
-                SideButton {
-
-                    Layout.fillWidth: true
-
-                    text: "Execution"
-
-                    iconCode: "\ue037"
-                }
-
-                Item {
-
-                    Layout.fillHeight: true
-                }
+            ConfigPanel { id: configPanelId; Layout.fillWidth: true }
+            PuzzleGrid {
+                id: puzzleBoardId
+                Layout.alignment: Qt.AlignHCenter
+                Layout.topMargin: 16
+                Layout.bottomMargin: 16
+                scale: 0.52
             }
+            MetricsPanel { id: metricsPanel; Layout.fillWidth: true }
+            Item { Layout.fillHeight: true }
         }
 
-        // --- CỘT 1: Config & Metrics (Đã thu hẹp xuống 210) ---
-        ColumnLayout {
-            Layout.leftMargin: 30
-            Layout.preferredWidth: 210 // Giảm từ 240 xuống 210
-            Layout.minimumWidth: 210
-            Layout.fillHeight: true
-            Layout.topMargin: 30
-            Layout.bottomMargin: 30
-            spacing: 20
-
-            ConfigPanel {
-                Layout.fillWidth: true
-            }
-            MetricsPanel {
-                Layout.fillWidth: true
-            }
-            Item {
-                Layout.fillHeight: true
-            }
-        }
-
-        // --- CỘT 2: Puzzle Visualization (Tạo thêm khoảng cách) ---
-        ColumnLayout {
+        ScrollView {
+            id: treeScrollView
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.topMargin: 30
-            Layout.bottomMargin: 30
-
-            // Thêm Margin trái/phải để ép khoảng cách với Control Panel
-            Layout.leftMargin: 40
-            Layout.rightMargin: 40
-            spacing: 15
+            clip: true
+            ScrollBar.horizontal.policy: ScrollBar.AsNeeded
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
             Item {
-                Layout.fillHeight: true
-            }
+                id: treeContent
+                width: 8000
+                height: 8000
 
-            PuzzleGrid {
-                id: mainGrid
-                // Cập nhật kích thước gợi ý mới
-                implicitWidth: 468
-                implicitHeight: 468
-                Layout.alignment: Qt.AlignHCenter
-            }
+                Canvas {
+                    id: treeCanvas
+                    anchors.fill: parent
+                    z: -1
+                    onPaint: {
+                        var ctx = getContext("2d")
+                        ctx.reset()
+                        ctx.strokeStyle = "#2563eb"
+                        ctx.lineWidth = 2
+                        ctx.fillStyle = "#2563eb"
 
-            ControlPanel {
-                implicitWidth: 540
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 15
-            }
+                        for (var edgeId in screen.edgeMap) {
+                            var edge = screen.edgeMap[edgeId]
+                            var fromNode = screen.nodeMap[edge.from]
+                            var toNode = screen.nodeMap[edge.to]
+                            if (!fromNode || !toNode) {
+                                continue
+                            }
 
-            Item {
-                Layout.fillHeight: true
+                            var startX = fromNode.x
+                            var startY = fromNode.y + 165
+                            var endX = toNode.x
+                            var endY = toNode.y - 6
+
+                            ctx.beginPath()
+                            ctx.moveTo(startX, startY)
+                            ctx.lineTo(endX, endY)
+                            ctx.stroke()
+
+                            var angle = Math.atan2(endY - startY, endX - startX)
+                            var arrowLength = 10
+                            ctx.beginPath()
+                            ctx.moveTo(endX, endY)
+                            ctx.lineTo(
+                                endX - arrowLength * Math.cos(angle - Math.PI / 6),
+                                endY - arrowLength * Math.sin(angle - Math.PI / 6)
+                            )
+                            ctx.lineTo(
+                                endX - arrowLength * Math.cos(angle + Math.PI / 6),
+                                endY - arrowLength * Math.sin(angle + Math.PI / 6)
+                            )
+                            ctx.closePath()
+                            ctx.fill()
+                        }
+                    }
+                }
             }
         }
 
-        // --- CỘT 3: Execution Log (Giữ nguyên hoặc thu hẹp nhẹ) ---
         LogList {
             id: executionLog
-            Layout.preferredWidth: 270 // Giảm nhẹ từ 285 xuống 270
-            Layout.minimumWidth: 270
+            Layout.preferredWidth: 300
             Layout.fillHeight: true
-            Layout.rightMargin: 30
-            Layout.topMargin: 30
-            Layout.bottomMargin: 30
         }
+    }
+
+    ControlPanel {
+        anchors.bottom: parent.bottom
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin: 20
+        z: 10
     }
 }

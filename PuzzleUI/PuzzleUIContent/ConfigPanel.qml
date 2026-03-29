@@ -5,16 +5,20 @@ import QtQuick.Layouts
 Rectangle {
     id: root
     Layout.fillWidth: true
-    implicitHeight: 420 // Tăng chiều cao để chứa đủ các tùy chọn
+    implicitHeight: 450 // Tăng nhẹ chiều cao để thoải mái hơn
     color: "#eff4ff"
     radius: 16
+
+    // 1. THÊM ALIAS: Để ControlPanel có thể lấy được thuật toán đang chọn
+    property alias selectedAlgorithm: strategyCombo.currentText
+    // Thêm alias cho Heuristic nếu cần
+    property string selectedHeuristic: manhattanBtn.checked ? "Manhattan" : (misplacedBtn.checked ? "Misplaced" : "Euclidean")
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 24
         spacing: 20
 
-        // Tiêu đề chính
         Text {
             text: "Algorithm Configuration"
             font.family: "Space Grotesk"
@@ -41,62 +45,56 @@ Rectangle {
             ComboBox {
                 id: strategyCombo
                 Layout.fillWidth: true
-                model: ["A* Search", "Breadth-First Search", "Depth-First Search"]
+                
+                // 2. CẬP NHẬT ĐỦ 8 THUẬT TOÁN (Khớp với logic trong bridge.py)
+                model: [
+                    "A* Search",
+                    "Breadth-First Search (BFS)",
+                    "Depth-First Search (DFS)",
+                    "Uniform Cost Search (UCS)",
+                    "Greedy Best-First Search (GBFS)",
+                    "Iterative Deepening Search (IDDFS)",
+                    "Bidirectional Search",
+                    "Iterative Deepening A* (IDA*)"
+                ]
 
-                // Tùy chỉnh phần hiển thị văn bản khi đóng
+                delegate: ItemDelegate {
+                    width: strategyCombo.width
+                    contentItem: Text {
+                        text: modelData
+                        color: "#0d1c2f"
+                        font.family: "Manrope"
+                        font.pixelSize: 14
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    highlighted: strategyCombo.highlightedIndex === index
+                }
+
                 contentItem: Text {
-                    leftPadding: 16
-                    text: strategyCombo.displayText
-                    font.family: "Inter"
-                    font.pixelSize: 16
+                    leftPadding: 12
+                    text: strategyCombo.currentText
+                    font.family: "Manrope"
+                    font.pixelSize: 14
                     color: "#0d1c2f"
                     verticalAlignment: Text.AlignVCenter
                 }
 
-                // Tùy chỉnh nền (Hộp trắng bo góc)
                 background: Rectangle {
-                    implicitHeight: 52
-                    color: "white"
+                    implicitHeight: 45
                     radius: 8
-
-                    // Icon mũi tên xuống (giống trong ảnh)
-                    // Text {
-                    //     anchors.right: parent.right
-                    //     anchors.rightMargin: 16
-                    //     anchors.verticalCenter: parent.verticalCenter
-                    //     text: "\ue5cf" // expand_more
-                    //     font.family: "Material Icons"
-                    //     font.pixelSize: 24
-                    //     color: "#727783"
-                    // }
-                }
-
-                // Tùy chỉnh danh sách thả xuống (Popup)
-                popup: Popup {
-                    y: strategyCombo.height + 5
-                    width: strategyCombo.width
-                    implicitHeight: contentItem.implicitHeight
-                    padding: 1
-
-                    contentItem: ListView {
-                        clip: true
-                        implicitHeight: contentHeight
-                        model: strategyCombo.popup.visible ? strategyCombo.delegateModel : null
-                    }
-
-                    background: Rectangle {
-                        color: "white"
-                        radius: 8
-                        border.color: "#dde9ff"
-                    }
+                    color: "white"
+                    border.color: strategyCombo.visualFocus ? "#005fb8" : "#d5e3fc"
+                    border.width: 1
                 }
             }
         }
 
-        // --- SECTION: HEURISTIC FUNCTION ---
+        // --- SECTION: HEURISTIC (Dành cho A*, IDA*, GBFS) ---
         ColumnLayout {
-            spacing: 15
+            spacing: 12
             Layout.fillWidth: true
+            // Chỉ hiện Heuristic nếu thuật toán được chọn có dùng nó
+            visible: strategyCombo.currentText.includes("A*") || strategyCombo.currentText.includes("Greedy")
 
             Text {
                 text: "HEURISTIC FUNCTION"
@@ -104,19 +102,14 @@ Rectangle {
                 font.pixelSize: 11
                 font.weight: Font.Bold
                 color: "#727783"
-                Layout.topMargin: 10
+                Layout.leftMargin: 2
             }
 
-            // Group để đảm bảo chỉ chọn được 1 radio button
-            ButtonGroup { id: heuristicGroup }
-
-            // Thành phần RadioButton tùy chỉnh
             component StyledRadioButton : RadioButton {
                 id: control
-                font.family: "Inter"
-                font.pixelSize: 16
-                ButtonGroup.group: heuristicGroup
-
+                font.family: "Manrope"
+                font.pixelSize: 14
+                
                 contentItem: Text {
                     text: control.text
                     font: control.font
@@ -125,7 +118,6 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                 }
 
-                // Vẽ vòng tròn theo phong cách trong ảnh
                 indicator: Rectangle {
                     implicitWidth: 24
                     implicitHeight: 24
@@ -133,10 +125,9 @@ Rectangle {
                     y: parent.height / 2 - height / 2
                     radius: 12
                     border.color: control.checked ? "#00488d" : "#727783"
-                    border.width: control.checked ? 7 : 2 // Độ dày viền tạo hiệu ứng vòng tròn xanh
+                    border.width: control.checked ? 7 : 2
                     color: "transparent"
 
-                    // Chấm trắng nhỏ ở giữa khi được chọn
                     Rectangle {
                         width: 6; height: 6
                         anchors.centerIn: parent
@@ -147,11 +138,11 @@ Rectangle {
                 }
             }
 
-            StyledRadioButton { text: "Manhattan Distance"; checked: true }
-            StyledRadioButton { text: "Misplaced Tiles" }
-            StyledRadioButton { text: "Euclidean Distance" }
+            StyledRadioButton { id: manhattanBtn; text: "Manhattan Distance"; checked: true }
+            StyledRadioButton { id: misplacedBtn; text: "Misplaced Tiles" }
+            StyledRadioButton { id: euclideanBtn; text: "Euclidean Distance" }
         }
 
-        Item { Layout.fillHeight: true } // Đẩy nội dung lên trên
+        Item { Layout.fillHeight: true }
     }
 }

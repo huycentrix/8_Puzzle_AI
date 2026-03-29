@@ -4,6 +4,8 @@ from pathlib import Path
 from PySide6.QtGui import QGuiApplication, QFontDatabase
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
+from bridge import PuzzleBridge # NEW
+from puzzle.puzzle import Puzzle # NEW
 
 def main():
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
@@ -11,6 +13,14 @@ def main():
     
     app = QGuiApplication(sys.argv)
     
+    # NEW: Khởi tạo Bridge
+    py_bridge = PuzzleBridge(Puzzle)
+
+    engine = QQmlApplicationEngine()
+    
+    # NEW: Đăng ký py_bridge với QML dưới tên "backend"
+    engine.rootContext().setContextProperty("backend", py_bridge)
+
     project_root = Path(__file__).parent.parent.absolute()
 
     os.environ["QT_QUICK_CONTROLS_CONF"] = str(project_root / "qtquickcontrols2.conf")

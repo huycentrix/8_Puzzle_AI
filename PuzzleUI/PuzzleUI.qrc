@@ -8,12 +8,6 @@
         <file>PuzzleUIContent/App.qml</file>
         <file>PuzzleUIContent/ConfigPanel.qml</file>
         <file>PuzzleUIContent/ControlPanel.qml</file>
-        <file>PuzzleUIContent/fonts/Inter-Italic-VariableFont_opsz,wght.ttf</file>
-        <file>PuzzleUIContent/fonts/Inter-VariableFont_opsz,wght.ttf</file>
-        <file>PuzzleUIContent/fonts/Manrope-VariableFont_wght.ttf</file>
-        <file>PuzzleUIContent/fonts/MaterialIcons-Regular.ttf</file>
-        <file>PuzzleUIContent/fonts/MaterialIconsOutlined-Regular.otf</file>
-        <file>PuzzleUIContent/fonts/SpaceGrotesk-VariableFont_wght.ttf</file>
         <file>PuzzleUIContent/LogList.qml</file>
         <file>PuzzleUIContent/MaterialIcon.qml</file>
         <file>PuzzleUIContent/MetricsPanel.qml</file>

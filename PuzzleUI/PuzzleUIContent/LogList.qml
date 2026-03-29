@@ -5,16 +5,32 @@ import QtQuick.Layouts
 Rectangle {
     id: logRoot
     radius: 16
-    color: "white" // Nền trắng để nổi bật trên nền xám nhẹ của app
+    color: "white"
     border.color: "#e2e8f0"
     border.width: 1
+
+    ListModel {
+        id: logModel
+    }
+
+    function appendLog(stepName, message) {
+        let currentTime = new Date().toLocaleTimeString(Qt.locale(), "hh:mm:ss")
+        logModel.insert(0, {
+            "stepTitle": stepName,
+            "details": message,
+            "timestamp": currentTime
+        })
+    }
+
+    function clearLog() {
+        logModel.clear()
+    }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
         spacing: 15
 
-        // Header: Tiêu đề và Icon
         RowLayout {
             Layout.fillWidth: true
             Text {
@@ -26,20 +42,19 @@ Rectangle {
             }
             Item { Layout.fillWidth: true }
             MaterialIcon {
-                iconCode: "\ue8d8" // terminal icon
+                iconCode: "\ue8d8"
                 color: "#727783"
                 font.pixelSize: 20
             }
         }
 
-        // Danh sách Nhật ký (ListView)
         ListView {
             id: logListView
             Layout.fillWidth: true
-            Layout.fillHeight: true // QUAN TRỌNG: Để ListView chiếm hết chiều cao còn lại
+            Layout.fillHeight: true
             spacing: 8
-            clip: true // Chống tràn nội dung ra ngoài Rectangle
-            model: 10 // Giả định có nhiều bước để test cuộn
+            clip: true
+            model: logModel
 
             ScrollBar.vertical: ScrollBar {
                 policy: ScrollBar.AsNeeded
@@ -54,9 +69,9 @@ Rectangle {
                 border.width: index === 0 ? 1 : 0
                 border.color: "#dbeafe"
 
-                // Thanh chỉ báo bên trái cho bước hiện tại
                 Rectangle {
-                    width: 4; height: parent.height
+                    width: 4
+                    height: parent.height
                     anchors.left: parent.left
                     color: "#00488d"
                     visible: index === 0
@@ -72,7 +87,7 @@ Rectangle {
                     RowLayout {
                         Layout.fillWidth: true
                         Text {
-                            text: "STEP " + (index + 1)
+                            text: model.stepTitle
                             font.family: "Manrope"
                             font.pixelSize: 10
                             font.weight: Font.Bold
@@ -80,7 +95,7 @@ Rectangle {
                         }
                         Item { Layout.fillWidth: true }
                         Text {
-                            text: "10:42:0" + index
+                            text: model.timestamp
                             font.family: "Manrope"
                             font.pixelSize: 10
                             color: "#94a3b8"
@@ -88,17 +103,17 @@ Rectangle {
                     }
 
                     Text {
-                        text: index === 0 ? "Shift Tile 4 Right" : "Previous Movement"
+                        text: model.details
                         font.family: "Inter"
                         font.pixelSize: 14
                         font.weight: index === 0 ? Font.Bold : Font.Normal
                         color: index === 0 ? "#0f172a" : "#475569"
+                        elide: Text.ElideRight
                     }
                 }
             }
         }
 
-        // Nút Export (Luôn nằm ở dưới cùng)
         Button {
             Layout.fillWidth: true
             height: 40

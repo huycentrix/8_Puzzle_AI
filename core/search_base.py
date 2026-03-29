@@ -1,62 +1,56 @@
 from abc import ABC, abstractmethod
 import time
-from core.node import Node
+
 
 class SearchResult:
-    """
-    Lớp lưu trữ kết quả sau khi thực hiện thuật toán tìm kiếm.
-    """
     def __init__(self):
-        # Danh sách các trạng thái tạo thành đường đi từ Start đến Goal
         self.path = []
-        
-        # Danh sách tất cả các trạng thái đã bị lấy ra khỏi Frontier (đã duyệt) 
         self.explored_nodes = []
-        
-        # Tổng chi phí đường đi (trong 8-puzzle thường là số bước di chuyển)
         self.path_cost = 0.0
-        
-        # Thời gian thực thi thuật toán (tính bằng giây) 
         self.processing_time = 0.0
-        
-        # Trạng thái tìm kiếm thành công hay thất bại
         self.success = False
-        
-        # Lưu trữ chi tiết từng bước (current node, frontier,...) để minh họa thuật toán 
         self.steps = []
 
 
 class BaseSearch(ABC):
-    """
-    Lớp cơ sở trừu tượng (Abstract Base Class) cho tất cả các thuật toán tìm kiếm.
-    """
     def __init__(self, start_state, goal_state):
-        # Trạng thái bắt đầu của bài toán 
         self.start_state = start_state
-        
-        # Trạng thái đích cần đạt tới 
         self.goal_state = goal_state
 
     def extract_path(self, node):
-        """
-        Truy vết ngược từ node đích về node cha để lấy toàn bộ lộ trình.
-        """
         path = []
-        # Lưu lại chi phí thực tế g(n) tại node cuối cùng 
-        cost = node.g 
-        
-        # Di chuyển ngược từ đích về gốc dựa trên tham chiếu 'parent'
+        cost = node.g
+
         while node:
             path.append(node.state)
             node = node.parent
-            
-        # Đảo ngược danh sách để có thứ tự từ Start -> Goal 
+
         return path[::-1], cost
+
+    def serialize_state(self, state):
+        return [item for row in state for item in row]
+
+    def node_snapshot(self, node):
+        return {
+            "state": node.state,
+            "flat_state": self.serialize_state(node.state),
+            "g": getattr(node, "g", 0),
+            "h": getattr(node, "h", 0),
+            "f": getattr(node, "f", getattr(node, "g", 0) + getattr(node, "h", 0)),
+        }
+
+    def record_step(self, result, current, frontier=None, children=None, is_goal=False, extra=None):
+        step = {
+            "current_node": self.node_snapshot(current),
+            "parent_state": current.parent.state if current.parent else None,
+            "frontier": [self.node_snapshot(node) for node in (frontier or [])],
+            "children": [self.node_snapshot(node) for node in (children or [])],
+            "is_goal": is_goal,
+        }
+        if extra:
+            step.update(extra)
+        result.steps.append(step)
 
     @abstractmethod
     def search(self):
-        """
-        Phương thức trừu tượng buộc các lớp con (BFS, DFS, A*,...) phải tự định nghĩa 
-        logic tìm kiếm riêng. 
-        """
         pass
