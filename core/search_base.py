@@ -1,15 +1,20 @@
 from abc import ABC, abstractmethod
-import time
+from time import perf_counter
 
 
 class SearchResult:
     def __init__(self):
         self.path = []
         self.explored_nodes = []
-        self.path_cost = 0.0
+        self.path_cost = 0
         self.processing_time = 0.0
         self.success = False
         self.steps = []
+        self.frontier_peak = 0
+        self.start_time = perf_counter()
+
+    def finish(self):
+        self.processing_time = perf_counter() - self.start_time
 
 
 class BaseSearch(ABC):
@@ -19,13 +24,11 @@ class BaseSearch(ABC):
 
     def extract_path(self, node):
         path = []
-        cost = node.g
-
         while node:
             path.append(node.state)
             node = node.parent
-
-        return path[::-1], cost
+        path.reverse()
+        return path, len(path) - 1
 
     def serialize_state(self, state):
         return [item for row in state for item in row]
@@ -34,23 +37,33 @@ class BaseSearch(ABC):
         return {
             "state": node.state,
             "flat_state": self.serialize_state(node.state),
-            "g": getattr(node, "g", 0),
-            "h": getattr(node, "h", 0),
-            "f": getattr(node, "f", getattr(node, "g", 0) + getattr(node, "h", 0)),
+            "g": node.g,
+            "h": node.h,
+            "f": node.f,
+            "depth": node.depth,
         }
 
     def record_step(self, result, current, frontier=None, children=None, is_goal=False, extra=None):
+        frontier = list(frontier or [])
+        children = list(children or [])
+        result.frontier_peak = max(result.frontier_peak, len(frontier))
         step = {
             "current_node": self.node_snapshot(current),
             "parent_state": current.parent.state if current.parent else None,
-            "frontier": [self.node_snapshot(node) for node in (frontier or [])],
-            "children": [self.node_snapshot(node) for node in (children or [])],
+            "frontier": [self.node_snapshot(node) for node in frontier],
+            "children": [self.node_snapshot(node) for node in children],
+            "frontier_count": len(frontier),
+            "explored_count": len(result.explored_nodes),
             "is_goal": is_goal,
         }
         if extra:
             step.update(extra)
         result.steps.append(step)
 
+    def mark_success(self, result, node):
+        result.path, result.path_cost = self.extract_path(node)
+        result.success = True
+
     @abstractmethod
     def search(self):
-        pass
+        raise NotImplementedError

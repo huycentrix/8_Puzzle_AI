@@ -1,7 +1,7 @@
-import time
 from collections import deque
-from core.search_base import BaseSearch, SearchResult
+
 from core.node import Node
+from core.search_base import BaseSearch, SearchResult
 
 
 class BFS(BaseSearch):
@@ -11,37 +11,28 @@ class BFS(BaseSearch):
 
     def search(self):
         result = SearchResult()
-        start_time = time.time()
-
-        start_node = Node(state=self.start_state, cost=0)
-        frontier = deque([start_node])
-        explored = {self.start_state}
+        frontier = deque([Node(self.start_state)])
+        visited = {self.start_state}
 
         while frontier:
             current = frontier.popleft()
             result.explored_nodes.append(current.state)
 
             if current.state == self.goal_state:
-                self.record_step(result, current, is_goal=True, extra={"cost": current.g})
-                result.path, result.path_cost = self.extract_path(current)
-                result.success = True
+                self.record_step(result, current, frontier, [], True)
+                self.mark_success(result, current)
                 break
 
-            generated_children = []
+            children = []
             for state in self.puzzle.get_neighbors(current.state):
-                if state not in explored:
-                    explored.add(state)
-                    neighbor = Node(state, current, cost=current.g + 1)
-                    frontier.append(neighbor)
-                    generated_children.append(neighbor)
+                if state in visited:
+                    continue
+                visited.add(state)
+                child = Node(state=state, parent=current, cost=current.g + 1)
+                frontier.append(child)
+                children.append(child)
 
-            self.record_step(
-                result,
-                current,
-                frontier=list(frontier),
-                children=generated_children,
-                extra={"cost": current.g},
-            )
+            self.record_step(result, current, frontier, children)
 
-        result.processing_time = time.time() - start_time
+        result.finish()
         return result

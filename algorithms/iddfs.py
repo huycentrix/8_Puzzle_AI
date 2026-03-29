@@ -1,6 +1,5 @@
-import time
-from core.search_base import BaseSearch, SearchResult
 from core.node import Node
+from core.search_base import BaseSearch, SearchResult
 
 
 class IDDFSearch(BaseSearch):
@@ -10,62 +9,58 @@ class IDDFSearch(BaseSearch):
 
     def search(self):
         result = SearchResult()
-        start_time = time.time()
-        limit = 0
+        depth_limit = 0
 
         while True:
-            found_node, is_cutoff = self.dls(Node(self.start_state), limit, {self.start_state}, result, limit)
-
-            if found_node:
-                result.path, result.path_cost = self.extract_path(found_node)
-                result.success = True
+            found_node, cutoff = self.depth_limited_search(
+                Node(self.start_state, cost=0),
+                depth_limit,
+                {self.start_state},
+                result,
+                depth_limit,
+            )
+            if found_node is not None:
+                self.mark_success(result, found_node)
                 break
-
-            if not is_cutoff:
+            if not cutoff:
                 break
+            depth_limit += 1
 
-            limit += 1
-
-        result.processing_time = time.time() - start_time
+        result.finish()
         return result
 
-    def dls(self, node, limit, path, result, current_iteration):
+    def depth_limited_search(self, node, depth_limit, path_states, result, iteration):
         result.explored_nodes.append(node.state)
 
         if node.state == self.goal_state:
-            self.record_step(
-                result,
-                node,
-                is_goal=True,
-                extra={"limit": limit, "iteration": current_iteration},
-            )
+            self.record_step(result, node, [], [], True, {"limit": depth_limit, "iteration": iteration})
             return node, False
 
-        if limit <= 0:
+        if depth_limit == 0:
             return None, True
 
-        cutoff_occurred = False
-        successors = []
-
-        for next_state in self.puzzle.get_neighbors(node.state):
-            if next_state not in path:
-                successors.append(Node(state=next_state, parent=node, cost=node.g + 1))
+        children = []
+        for state in self.puzzle.get_neighbors(node.state):
+            if state in path_states:
+                continue
+            children.append(Node(state=state, parent=node, cost=node.g + 1))
 
         self.record_step(
             result,
             node,
-            frontier=successors,
-            children=successors,
-            extra={"limit": limit, "iteration": current_iteration},
+            children,
+            children,
+            False,
+            {"limit": depth_limit, "iteration": iteration},
         )
 
-        for child in successors:
-            path.add(child.state)
-            found, shifted_cutoff = self.dls(child, limit - 1, path, result, current_iteration)
-            if found:
-                return found, False
-            if shifted_cutoff:
-                cutoff_occurred = True
-            path.remove(child.state)
+        cutoff_occurred = False
+        for child in children:
+            path_states.add(child.state)
+            found_node, cutoff = self.depth_limited_search(child, depth_limit - 1, path_states, result, iteration)
+            if found_node is not None:
+                return found_node, False
+            cutoff_occurred = cutoff_occurred or cutoff
+            path_states.remove(child.state)
 
         return None, cutoff_occurred

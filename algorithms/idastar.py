@@ -1,6 +1,5 @@
-import time
-from core.search_base import BaseSearch, SearchResult
 from core.node import Node
+from core.search_base import BaseSearch, SearchResult
 
 
 class IDAStarSearch(BaseSearch):
@@ -10,44 +9,37 @@ class IDAStarSearch(BaseSearch):
 
     def search(self):
         result = SearchResult()
-        start_time = time.time()
-
-        root = Node(
-            state=self.start_state,
-            cost=0,
-            heuristic=self.puzzle.heuristic(self.start_state),
-        )
-        f_limit = root.f
+        root = Node(self.start_state, cost=0, heuristic=self.puzzle.heuristic(self.start_state))
+        threshold = root.f
 
         while True:
-            solution, new_limit = self.dfs_contour(root, f_limit, {root.state}, result)
-
-            if solution is not None:
-                result.path, result.path_cost = self.extract_path(solution)
-                result.success = True
+            found_node, next_threshold = self.search_contour(root, threshold, {root.state}, result)
+            if found_node is not None:
+                self.mark_success(result, found_node)
                 break
-
-            if new_limit == float("inf"):
+            if next_threshold == float("inf"):
                 break
+            threshold = next_threshold
 
-            f_limit = new_limit
-
-        result.processing_time = time.time() - start_time
+        result.finish()
         return result
 
-    def dfs_contour(self, node, f_limit, path, result):
-        if node.f > f_limit:
+    def search_contour(self, node, threshold, path_states, result):
+        if node.f > threshold:
             return None, node.f
 
+        result.explored_nodes.append(node.state)
+
         if node.state == self.goal_state:
-            self.record_step(result, node, is_goal=True, extra={"f_limit": f_limit})
-            return node, f_limit
+            self.record_step(result, node, [], [], True, {"f_limit": threshold})
+            return node, threshold
 
-        min_limit = float("inf")
-        successors = []
-
+        minimum_exceeded = float("inf")
+        children = []
         for state in self.puzzle.get_neighbors(node.state):
-            successors.append(
+            if state in path_states:
+                continue
+            children.append(
                 Node(
                     state=state,
                     parent=node,
@@ -56,16 +48,14 @@ class IDAStarSearch(BaseSearch):
                 )
             )
 
-        self.record_step(result, node, frontier=successors, children=successors, extra={"f_limit": f_limit})
+        self.record_step(result, node, children, children, False, {"f_limit": threshold})
 
-        for child in successors:
-            if child.state not in path:
-                path.add(child.state)
-                res, new_limit = self.dfs_contour(child, f_limit, path, result)
-                if res is not None:
-                    return res, f_limit
-                if new_limit < min_limit:
-                    min_limit = new_limit
-                path.remove(child.state)
+        for child in children:
+            path_states.add(child.state)
+            found_node, next_threshold = self.search_contour(child, threshold, path_states, result)
+            if found_node is not None:
+                return found_node, threshold
+            minimum_exceeded = min(minimum_exceeded, next_threshold)
+            path_states.remove(child.state)
 
-        return None, min_limit
+        return None, minimum_exceeded

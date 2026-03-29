@@ -1,4 +1,4 @@
-from PySide6.QtCore import QObject, Slot, Signal, QTimer
+from PySide6.QtCore import QObject, QTimer, Signal, Slot
 
 from algorithms.astar import AStarSearch
 from algorithms.bfs import BFS
@@ -11,22 +11,27 @@ from algorithms.ucs import UniformCostSearch
 
 
 class PuzzleBridge(QObject):
-    stepUpdated = Signal("QVariantMap")
     searchReset = Signal()
-    searchFinished = Signal(bool, list)
+    stepUpdated = Signal("QVariantMap")
+    searchFinished = Signal("QVariantMap")
+    searchError = Signal(str)
 
     def __init__(self, puzzle_class):
         super().__init__()
         self.PuzzleClass = puzzle_class
         self.timer = QTimer()
         self.timer.timeout.connect(self.show_next_step)
+        self.canvas_width = 3600
+        self.level_height = 250
+        self.reset_runtime()
+
+    def reset_runtime(self):
         self.all_steps = []
         self.path_ids = []
         self.current_step_idx = 0
-        self.canvas_width = 2400
-        self.level_height = 250
         self.node_positions = {}
         self.rendered_children = {}
+        self.summary = {}
 
     def state_key(self, flat_state):
         return ",".join(str(item) for item in flat_state)
@@ -34,27 +39,40 @@ class PuzzleBridge(QObject):
     def flatten_state(self, state):
         return [item for row in state for item in row]
 
+    def create_solver(self, method, start_state, goal_state, puzzle_logic):
+        mapping = {
+            "A* Search": AStarSearch,
+            "Breadth-First Search (BFS)": BFS,
+            "Depth-First Search (DFS)": DFS,
+            "Uniform Cost Search (UCS)": UniformCostSearch,
+            "Greedy Best-First Search (GBFS)": GreedyBestFirstSearch,
+            "Iterative Deepening Search (IDDFS)": IDDFSearch,
+            "Iterative Deepening A* (IDA*)": IDAStarSearch,
+            "Bidirectional Search": BidirectionalSearch,
+        }
+        if method not in mapping:
+            raise ValueError(f"Unsupported method: {method}")
+        return mapping[method](start_state, goal_state, puzzle_logic)
+
     def ensure_node_position(self, node_info, parent_key=""):
         node_key = self.state_key(node_info["flat_state"])
         if node_key in self.node_positions:
-            x, y = self.node_positions[node_key]
-            return node_key, x, y
+            return node_key, *self.node_positions[node_key]
 
+        depth = node_info.get("depth", 0)
         if parent_key and parent_key in self.node_positions:
             parent_x, parent_y = self.node_positions[parent_key]
-            sibling_bucket = self.rendered_children.setdefault(parent_key, [])
-            if node_key not in sibling_bucket:
-                sibling_bucket.append(node_key)
-
-            child_count = max(len(sibling_bucket), 1)
-            child_index = sibling_bucket.index(node_key)
-            spacing = 220
-            start_x = parent_x - ((child_count - 1) * spacing) / 2
-            x = int(start_x + child_index * spacing)
-            y = parent_y + self.level_height
+            siblings = self.rendered_children.setdefault(parent_key, [])
+            if node_key not in siblings:
+                siblings.append(node_key)
+            sibling_index = siblings.index(node_key)
+            sibling_count = len(siblings)
+            spacing = 180
+            x = int(parent_x - ((sibling_count - 1) * spacing) / 2 + sibling_index * spacing)
+            y = int(parent_y + self.level_height)
         else:
-            x = self.canvas_width // 2
-            y = 100
+            x = int(self.canvas_width // 2)
+            y = 90
 
         self.node_positions[node_key] = (x, y)
         return node_key, x, y
@@ -68,83 +86,93 @@ class PuzzleBridge(QObject):
             "g": node_info.get("g", 0),
             "h": node_info.get("h", 0),
             "f": node_info.get("f", 0),
+            "depth": node_info.get("depth", 0),
             "status": "path" if is_goal else status,
             "x": x,
             "y": y,
-            "isGoal": is_goal,
         }
 
-    def create_solver(self, method, start_state, goal_state, puzzle_logic):
-        if method == "A* Search":
-            return AStarSearch(start_state, goal_state, puzzle_logic)
-        if method == "Breadth-First Search (BFS)":
-            return BFS(start_state, goal_state, puzzle_logic)
-        if method == "Depth-First Search (DFS)":
-            return DFS(start_state, goal_state, puzzle_logic)
-        if method == "Uniform Cost Search (UCS)":
-            return UniformCostSearch(start_state, goal_state, puzzle_logic)
-        if method == "Greedy Best-First Search (GBFS)":
-            return GreedyBestFirstSearch(start_state, goal_state, puzzle_logic)
-        if method == "Iterative Deepening Search (IDDFS)":
-            return IDDFSearch(start_state, goal_state, puzzle_logic)
-        if method == "Iterative Deepening A* (IDA*)":
-            return IDAStarSearch(start_state, goal_state, puzzle_logic)
-        if method == "Bidirectional Search":
-            return BidirectionalSearch(start_state, goal_state, puzzle_logic)
-        raise ValueError(f"Unsupported method: {method}")
-
-    @Slot(str, list, list, float)
-    def start_search(self, method, start_list, goal_list, speed):
-        start_state = tuple(tuple(start_list[i:i + 3]) for i in range(0, 9, 3))
+    @Slot(list, int, result="QVariantList")
+    def randomize_state(self, goal_list, moves=40):
         goal_state = tuple(tuple(goal_list[i:i + 3]) for i in range(0, 9, 3))
-
         puzzle_logic = self.PuzzleClass(goal_state)
-        solver = self.create_solver(method, start_state, goal_state, puzzle_logic)
+        randomized = puzzle_logic.randomize(goal_state, moves)
+        return self.flatten_state(randomized)
 
-        result = solver.search()
-        self.all_steps = result.steps
-        self.path_ids = [self.state_key(self.flatten_state(state)) for state in result.path]
-        self.current_step_idx = 0
-        self.node_positions = {}
-        self.rendered_children = {}
+    @Slot()
+    def stop_playback(self):
+        self.timer.stop()
+
+    @Slot(str, list, list, float, str)
+    def start_search(self, method, start_list, goal_list, speed, heuristic_name):
+        self.timer.stop()
+        self.reset_runtime()
         self.searchReset.emit()
 
-        start_key = self.state_key(start_list)
-        self.node_positions[start_key] = (self.canvas_width // 2, 100)
+        start_state = tuple(tuple(start_list[i:i + 3]) for i in range(0, 9, 3))
+        goal_state = tuple(tuple(goal_list[i:i + 3]) for i in range(0, 9, 3))
+        puzzle_logic = self.PuzzleClass(goal_state, heuristic_name)
 
-        interval = max(1, int(1000 / max(speed, 0.1)))
+        if not puzzle_logic.is_solvable(start_state):
+            self.searchError.emit("Initial state is not solvable for the selected 8-puzzle goal.")
+            return
+
+        solver = self.create_solver(method, start_state, goal_state, puzzle_logic)
+        result = solver.search()
+
+        self.all_steps = result.steps
+        self.path_ids = [self.state_key(self.flatten_state(state)) for state in result.path]
+        self.node_positions[self.state_key(start_list)] = (self.canvas_width // 2, 90)
+        self.summary = {
+            "success": result.success,
+            "algorithm": method,
+            "heuristic": heuristic_name,
+            "pathIds": self.path_ids,
+            "pathCost": result.path_cost,
+            "solutionDepth": max(0, len(result.path) - 1),
+            "exploredCount": len(result.explored_nodes),
+            "frontierPeak": result.frontier_peak,
+            "processingTimeMs": round(result.processing_time * 1000.0, 3),
+            "stepCount": len(result.steps),
+            "startState": start_list,
+            "goalState": goal_list,
+        }
+
+        if not self.all_steps:
+            self.searchFinished.emit(self.summary)
+            return
+
+        interval = max(80, int(1000 / max(speed, 0.1)))
         self.timer.start(interval)
 
     def show_next_step(self):
         if self.current_step_idx >= len(self.all_steps):
             self.timer.stop()
-            self.searchFinished.emit(True, self.path_ids)
+            self.searchFinished.emit(self.summary)
             return
 
         step = self.all_steps[self.current_step_idx]
-        current_info = step["current_node"]
         parent_key = ""
         if step.get("parent_state"):
             parent_key = self.state_key(self.flatten_state(step["parent_state"]))
 
         current_node = self.build_visual_node(
-            current_info,
+            step["current_node"],
             "explored",
-            parent_key=parent_key,
-            is_goal=step.get("is_goal", False),
+            parent_key,
+            step.get("is_goal", False),
         )
-
-        children_nodes = []
-        for child_info in step.get("children", []):
-            children_nodes.append(
-                self.build_visual_node(child_info, "frontier", parent_key=current_node["id"])
-            )
+        children = [
+            self.build_visual_node(child_info, "frontier", current_node["id"], False)
+            for child_info in step.get("children", [])
+        ]
 
         payload = {
             "stepNumber": self.current_step_idx + 1,
-            "nodesExpanded": len(children_nodes),
             "currentNode": current_node,
-            "children": children_nodes,
+            "children": children,
+            "frontierCount": step.get("frontier_count", 0),
+            "exploredCount": step.get("explored_count", 0),
             "isGoal": step.get("is_goal", False),
             "meta": {
                 "direction": step.get("direction", ""),

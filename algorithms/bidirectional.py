@@ -1,7 +1,7 @@
-import time
 from collections import deque
-from core.search_base import BaseSearch, SearchResult
+
 from core.node import Node
+from core.search_base import BaseSearch, SearchResult
 
 
 class BidirectionalSearch(BaseSearch):
@@ -11,74 +11,48 @@ class BidirectionalSearch(BaseSearch):
 
     def search(self):
         result = SearchResult()
-        start_time = time.time()
+        start_queue = deque([Node(self.start_state, cost=0)])
+        goal_queue = deque([Node(self.goal_state, cost=0)])
+        start_visited = {self.start_state: start_queue[0]}
+        goal_visited = {self.goal_state: goal_queue[0]}
 
-        queue_start = deque()
-        queue_goal = deque()
-        visited_start = {}
-        visited_goal = {}
+        while start_queue and goal_queue:
+            meeting_state = self.expand_one_side(start_queue, start_visited, goal_visited, result, "forward")
+            if meeting_state is not None:
+                self.combine_paths(meeting_state, start_visited, goal_visited, result)
+                break
 
-        start_node = Node(self.start_state, cost=0)
-        goal_node = Node(self.goal_state, cost=0)
+            meeting_state = self.expand_one_side(goal_queue, goal_visited, start_visited, result, "backward")
+            if meeting_state is not None:
+                self.combine_paths(meeting_state, start_visited, goal_visited, result)
+                break
 
-        queue_start.append(start_node)
-        queue_goal.append(goal_node)
-        visited_start[self.start_state] = start_node
-        visited_goal[self.goal_state] = goal_node
-
-        while queue_start and queue_goal:
-            intersection = self.expand_level(queue_start, visited_start, visited_goal, result, "Start")
-            if intersection:
-                return self.combine_path(intersection, visited_start, visited_goal, result, start_time)
-
-            intersection = self.expand_level(queue_goal, visited_goal, visited_start, result, "Goal")
-            if intersection:
-                return self.combine_path(intersection, visited_start, visited_goal, result, start_time)
-
-        result.processing_time = time.time() - start_time
+        result.finish()
         return result
 
-    def expand_level(self, queue, visited_mine, visited_other, result, direction):
+    def expand_one_side(self, queue, own_visited, other_visited, result, direction):
         current = queue.popleft()
         result.explored_nodes.append(current.state)
-        generated_children = []
 
-        for next_state in self.puzzle.get_neighbors(current.state):
-            if next_state not in visited_mine:
-                new_node = Node(state=next_state, parent=current, cost=current.g + 1)
-                visited_mine[next_state] = new_node
-                queue.append(new_node)
-                generated_children.append(new_node)
+        children = []
+        for state in self.puzzle.get_neighbors(current.state):
+            if state in own_visited:
+                continue
+            child = Node(state=state, parent=current, cost=current.g + 1)
+            own_visited[state] = child
+            queue.append(child)
+            children.append(child)
+            if state in other_visited:
+                self.record_step(result, current, queue, children, False, {"direction": direction})
+                return state
 
-                if next_state in visited_other:
-                    self.record_step(
-                        result,
-                        current,
-                        frontier=list(queue),
-                        children=generated_children,
-                        extra={"direction": direction},
-                    )
-                    return next_state
-
-        self.record_step(
-            result,
-            current,
-            frontier=list(queue),
-            children=generated_children,
-            extra={"direction": direction},
-        )
+        self.record_step(result, current, queue, children, False, {"direction": direction})
         return None
 
-    def combine_path(self, intersection_state, visited_start, visited_goal, result, start_time):
-        node_start_side = visited_start[intersection_state]
-        path_start, _ = self.extract_path(node_start_side)
-
-        node_goal_side = visited_goal[intersection_state]
-        path_goal, _ = self.extract_path(node_goal_side)
-
-        result.path = path_start + path_goal[::-1][1:]
+    def combine_paths(self, meeting_state, start_visited, goal_visited, result):
+        start_path, _ = self.extract_path(start_visited[meeting_state])
+        goal_path, _ = self.extract_path(goal_visited[meeting_state])
+        result.path = start_path + list(reversed(goal_path[:-1]))
         result.path_cost = len(result.path) - 1
         result.success = True
-        result.processing_time = time.time() - start_time
-        self.record_step(result, node_start_side, is_goal=True)
-        return result
+        self.record_step(result, start_visited[meeting_state], [], [], True, {"direction": "meeting"})

@@ -1,37 +1,42 @@
 import os
 import sys
 from pathlib import Path
-from PySide6.QtGui import QGuiApplication, QFontDatabase
+
 from PySide6.QtQml import QQmlApplicationEngine
-from bridge import PuzzleBridge 
+from PySide6.QtWidgets import QApplication
+
+from bridge import PuzzleBridge
 from puzzle.puzzle import Puzzle
+
+
+def print_qml_warnings(warnings):
+    for warning in warnings:
+        print(warning.toString(), file=sys.stderr)
+
 
 def main():
     os.environ["QT_ENABLE_HIGHDPI_SCALING"] = "1"
-    app = QGuiApplication(sys.argv)
-    
-    # THÊM DÒNG NÀY ĐỂ FIX LỖI CUSTOMIZATION
-    from PySide6.QtQuickControls2 import QQuickStyle
-    QQuickStyle.setStyle("Basic") # Hoặc "Material", "Fusion"
-    
-    # Khởi tạo cầu nối
-    py_bridge = PuzzleBridge(Puzzle)
 
+    app = QApplication(sys.argv)
     engine = QQmlApplicationEngine()
-    
-    # Đăng ký backend cho QML
-    engine.rootContext().setContextProperty("backend", py_bridge)
-    
+    engine.warnings.connect(print_qml_warnings)
+
+    backend = PuzzleBridge(Puzzle)
+    engine.rootContext().setContextProperty("backend", backend)
+
     project_root = Path(__file__).parent.absolute()
     engine.addImportPath(str(project_root))
-    engine.addImportPath(str(project_root / "PuzzleUIContent"))
-    
-    main_qml_path = project_root / "PuzzleUI" / "PuzzleUIContent" / "App.qml"
-    engine.load(str(main_qml_path))
+    engine.addImportPath(str(project_root / "PuzzleUI"))
+    engine.addImportPath(str(project_root / "PuzzleUI" / "PuzzleUIContent"))
+
+    app_qml = project_root / "PuzzleUI" / "PuzzleUIContent" / "App.qml"
+    engine.load(str(app_qml))
 
     if not engine.rootObjects():
-        sys.exit(-1)
-    sys.exit(app.exec())
+        return -1
+
+    return app.exec()
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

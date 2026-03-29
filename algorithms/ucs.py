@@ -1,7 +1,8 @@
 import heapq
-import time
-from core.search_base import BaseSearch, SearchResult
+from itertools import count
+
 from core.node import Node
+from core.search_base import BaseSearch, SearchResult
 
 
 class UniformCostSearch(BaseSearch):
@@ -11,37 +12,35 @@ class UniformCostSearch(BaseSearch):
 
     def search(self):
         result = SearchResult()
-        start_time = time.time()
-
-        start_node = Node(state=self.start_state, parent=None, cost=0)
-        frontier = []
-        heapq.heappush(frontier, start_node)
-        visited = {}
+        sequence = count()
+        start = Node(self.start_state, cost=0)
+        frontier = [(start.g, next(sequence), start)]
+        best_cost = {self.start_state: 0}
 
         while frontier:
-            current = heapq.heappop(frontier)
-            result.explored_nodes.append(current.state)
-
-            if current.state == self.goal_state:
-                self.record_step(result, current, is_goal=True)
-                result.path, result.path_cost = self.extract_path(current)
-                result.success = True
-                break
-
-            if current.state in visited and visited[current.state] < current.g:
+            _, _, current = heapq.heappop(frontier)
+            if current.g > best_cost.get(current.state, float("inf")):
                 continue
 
-            visited[current.state] = current.g
-            generated_children = []
+            result.explored_nodes.append(current.state)
+            frontier_nodes = [entry[2] for entry in frontier]
 
+            if current.state == self.goal_state:
+                self.record_step(result, current, frontier_nodes, [], True)
+                self.mark_success(result, current)
+                break
+
+            children = []
             for state in self.puzzle.get_neighbors(current.state):
-                new_g = current.g + 1
-                if state not in visited or new_g < visited.get(state, float("inf")):
-                    neighbor = Node(state=state, parent=current, cost=new_g)
-                    heapq.heappush(frontier, neighbor)
-                    generated_children.append(neighbor)
+                new_cost = current.g + 1
+                if new_cost >= best_cost.get(state, float("inf")):
+                    continue
+                best_cost[state] = new_cost
+                child = Node(state=state, parent=current, cost=new_cost)
+                heapq.heappush(frontier, (child.g, next(sequence), child))
+                children.append(child)
 
-            self.record_step(result, current, frontier=list(frontier), children=generated_children)
+            self.record_step(result, current, [entry[2] for entry in frontier], children)
 
-        result.processing_time = time.time() - start_time
+        result.finish()
         return result

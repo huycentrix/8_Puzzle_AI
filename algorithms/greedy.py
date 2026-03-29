@@ -1,7 +1,8 @@
 import heapq
-import time
-from core.search_base import BaseSearch, SearchResult
+from itertools import count
+
 from core.node import Node
+from core.search_base import BaseSearch, SearchResult
 
 
 class GreedyBestFirstSearch(BaseSearch):
@@ -11,42 +12,38 @@ class GreedyBestFirstSearch(BaseSearch):
 
     def search(self):
         result = SearchResult()
-        start_time = time.time()
-
-        start_node = Node(
-            state=self.start_state,
-            heuristic=self.puzzle.heuristic(self.start_state),
-        )
-
-        frontier = []
-        heapq.heappush(frontier, start_node)
+        sequence = count()
+        start = Node(self.start_state, cost=0, heuristic=self.puzzle.heuristic(self.start_state))
+        frontier = [(start.h, start.f, next(sequence), start)]
         visited = set()
 
         while frontier:
-            current = heapq.heappop(frontier)
+            _, _, _, current = heapq.heappop(frontier)
+            if current.state in visited:
+                continue
+
+            visited.add(current.state)
             result.explored_nodes.append(current.state)
 
             if current.state == self.goal_state:
-                self.record_step(result, current, is_goal=True)
-                result.path, result.path_cost = self.extract_path(current)
-                result.success = True
+                self.record_step(result, current, [entry[3] for entry in frontier], [], True)
+                self.mark_success(result, current)
                 break
 
-            visited.add(current.state)
-            generated_children = []
-
+            children = []
             for state in self.puzzle.get_neighbors(current.state):
-                if state not in visited:
-                    neighbor = Node(
-                        state=state,
-                        parent=current,
-                        cost=0,
-                        heuristic=self.puzzle.heuristic(state),
-                    )
-                    heapq.heappush(frontier, neighbor)
-                    generated_children.append(neighbor)
+                if state in visited:
+                    continue
+                child = Node(
+                    state=state,
+                    parent=current,
+                    cost=current.g + 1,
+                    heuristic=self.puzzle.heuristic(state),
+                )
+                heapq.heappush(frontier, (child.h, child.f, next(sequence), child))
+                children.append(child)
 
-            self.record_step(result, current, frontier=list(frontier), children=generated_children)
+            self.record_step(result, current, [entry[3] for entry in frontier], children)
 
-        result.processing_time = time.time() - start_time
+        result.finish()
         return result

@@ -1,43 +1,67 @@
-// PuzzleNode.qml
 import QtQuick
 
-Column {
-    id: nodeRoot
-    spacing: 8
+Item {
+    id: root
     property var nodeData: []
-    property int f: 0; property int g: 0; property int h: 0
-    property string status: "frontier" 
+    property int g: 0
+    property int h: 0
+    property int f: 0
+    property string status: "frontier"
+    signal hovered(var state)
 
-    Rectangle {
-        width: 140; height: 140
-        color: status === "explored" ? "#bdbdbd" : (status === "path" ? "#fff9c4" : "white") 
-        border.color: "#333333"
-        border.width: status === "path" ? 3 : 1
+    width: 124
+    height: 154
 
-        Grid {
-            anchors.centerIn: parent
-            columns: 3; spacing: 0 // Khít nhau như hình mẫu
-            Repeater {
-                model: nodeRoot.nodeData
-                Rectangle {
-                    width: 40; height: 40
-                    color: modelData === 0 ? "#e0e0e0" : "transparent"
-                    border.color: "#999999"
-                    border.width: 1
-                    Text {
-                        anchors.centerIn: parent
-                        text: modelData === 0 ? "" : modelData
-                        font.pixelSize: 18; font.weight: Font.Bold
+    Column {
+        anchors.fill: parent
+        spacing: 6
+
+        Rectangle {
+            width: 124
+            height: 124
+            radius: 10
+            color: status === "path" ? "#fff4c2" : (status === "explored" ? "#d8dee9" : "#ffffff")
+            border.width: status === "path" ? 3 : 1
+            border.color: status === "path" ? "#b7791f" : "#475569"
+
+            Grid {
+                anchors.centerIn: parent
+                columns: 3
+                spacing: 0
+
+                Repeater {
+                    model: root.nodeData
+                    delegate: Rectangle {
+                        width: 34
+                        height: 34
+                        border.width: 1
+                        border.color: "#94a3b8"
+                        color: modelData === 0 ? "#e2e8f0" : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: modelData === 0 ? "" : modelData
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: "#0f172a"
+                        }
                     }
                 }
             }
-        }
-    }
 
-    // Công thức f = g + h đúng như hình mẫu
-    Text {
-        anchors.horizontalCenter: parent.horizontalCenter
-        text: f + " = " + g + " + " + h
-        font.pixelSize: 14; font.weight: Font.Bold
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                onEntered: root.hovered(root.nodeData)
+            }
+        }
+
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: "f=" + root.f + "  g=" + root.g + "  h=" + root.h
+            font.pixelSize: 12
+            font.bold: true
+            color: "#0f172a"
+        }
     }
 }
