@@ -354,9 +354,9 @@ ApplicationWindow {
                                         continue
                                     }
 
-                                    const startX = parentNode.x + 62
-                                    const startY = parentNode.y + 124
-                                    const endX = childNode.x + 62
+                                    const startX = parentNode.x + 74
+                                    const startY = parentNode.y + 148
+                                    const endX = childNode.x + 74
                                     const endY = childNode.y
 
                                     ctx.beginPath()

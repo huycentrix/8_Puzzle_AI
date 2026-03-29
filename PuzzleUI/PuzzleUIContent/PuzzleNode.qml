@@ -9,42 +9,43 @@ Item {
     property string status: "frontier"
     signal hovered(var state)
 
-    width: 124
-    height: 154
+    width: 148
+    height: 184
 
     Column {
         anchors.fill: parent
-        spacing: 6
+        spacing: 8
 
         Rectangle {
-            width: 124
-            height: 124
-            radius: 10
-            color: status === "path" ? "#fff4c2" : (status === "explored" ? "#d8dee9" : "#ffffff")
-            border.width: status === "path" ? 3 : 1
-            border.color: status === "path" ? "#b7791f" : "#475569"
+            width: 148
+            height: 148
+            radius: 16
+            color: status === "path" ? "#fff4c2" : (status === "explored" ? "#e5ebf5" : "#edf4ff")
+            border.width: status === "path" ? 4 : 1
+            border.color: status === "path" ? "#b7791f" : "#b9c8dd"
 
             Grid {
                 anchors.centerIn: parent
                 columns: 3
-                spacing: 0
+                spacing: 6
 
                 Repeater {
                     model: root.nodeData ? root.nodeData.length : 0
                     delegate: Rectangle {
-                        property int tileValue: root.nodeData[index]
-                        width: 34
-                        height: 34
-                        border.width: 1
-                        border.color: "#94a3b8"
-                        color: tileValue === 0 ? "#e2e8f0" : "transparent"
+                        property int tileValue: (root.nodeData && index < root.nodeData.length) ? root.nodeData[index] : 0
+                        width: 38
+                        height: 38
+                        radius: 8
+                        border.width: tileValue === 0 ? 0 : 1
+                        border.color: "#1d4ed8"
+                        color: tileValue === 0 ? "#dbe4f0" : "#2563eb"
 
                         Text {
                             anchors.centerIn: parent
                             text: tileValue === 0 ? "" : tileValue
-                            font.pixelSize: 16
+                            font.pixelSize: 18
                             font.bold: true
-                            color: "#0f172a"
+                            color: "#ffffff"
                         }
                     }
                 }
@@ -60,7 +61,7 @@ Item {
         Text {
             anchors.horizontalCenter: parent.horizontalCenter
             text: "f=" + root.f + "  g=" + root.g + "  h=" + root.h
-            font.pixelSize: 12
+            font.pixelSize: 13
             font.bold: true
             color: "#0f172a"
         }
