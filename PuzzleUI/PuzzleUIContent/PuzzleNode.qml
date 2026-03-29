@@ -25,13 +25,13 @@ Item {
             height: root.boardSize
             radius: 12
             color: status === "current"
-                ? "#dbeafe"
+                ? "#fff4c2"
                 : (status === "path"
                     ? "#fff4c2"
-                    : (status === "explored" ? "#e5ebf5" : "#edf4ff"))
+                    : (status === "explored" ? "#fff4c2" : "#ffffff"))
             border.width: status === "current" ? 3 : (status === "path" ? 3 : 1)
             border.color: status === "current"
-                ? "#2563eb"
+                ? "#d4a017"
                 : (status === "path" ? "#b7791f" : "#b9c8dd")
 
             Grid {
