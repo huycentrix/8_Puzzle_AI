@@ -5,16 +5,20 @@ import QtQuick.Layouts
 Rectangle {
     id: logRoot
     radius: 16
-    color: "white" // Nền trắng để nổi bật trên nền xám nhẹ của app
+    color: "white"
     border.color: "#e2e8f0"
     border.width: 1
+
+    // 1. Khai báo Model để lưu trữ nhật ký thực tế
+    ListModel {
+        id: realLogModel
+    }
 
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
         spacing: 15
 
-        // Header: Tiêu đề và Icon
         RowLayout {
             Layout.fillWidth: true
             Text {
@@ -26,20 +30,21 @@ Rectangle {
             }
             Item { Layout.fillWidth: true }
             MaterialIcon {
-                iconCode: "\ue8d8" // terminal icon
+                iconCode: "\ue8d8"
                 color: "#727783"
                 font.pixelSize: 20
             }
         }
 
-        // Danh sách Nhật ký (ListView)
         ListView {
             id: logListView
             Layout.fillWidth: true
-            Layout.fillHeight: true // QUAN TRỌNG: Để ListView chiếm hết chiều cao còn lại
+            Layout.fillHeight: true
             spacing: 8
-            clip: true // Chống tràn nội dung ra ngoài Rectangle
-            model: 10 // Giả định có nhiều bước để test cuộn
+            clip: true
+
+            // 2. Sử dụng model thực tế thay vì con số giả định
+            model: realLogModel
 
             ScrollBar.vertical: ScrollBar {
                 policy: ScrollBar.AsNeeded
@@ -50,13 +55,14 @@ Rectangle {
                 width: logListView.width
                 height: 72
                 radius: 12
+                // Bước mới nhất (index 0) sẽ có màu nền xanh nhạt
                 color: index === 0 ? "#eff6ff" : "transparent"
                 border.width: index === 0 ? 1 : 0
                 border.color: "#dbeafe"
 
-                // Thanh chỉ báo bên trái cho bước hiện tại
                 Rectangle {
-                    width: 4; height: parent.height
+                    width: 4
+                    height: parent.height
                     anchors.left: parent.left
                     color: "#00488d"
                     visible: index === 0
@@ -72,7 +78,8 @@ Rectangle {
                     RowLayout {
                         Layout.fillWidth: true
                         Text {
-                            text: "STEP " + (index + 1)
+                            // Lấy dữ liệu từ vai trò 'step' của model
+                            text: "STEP " + model.step
                             font.family: "Manrope"
                             font.pixelSize: 10
                             font.weight: Font.Bold
@@ -80,7 +87,8 @@ Rectangle {
                         }
                         Item { Layout.fillWidth: true }
                         Text {
-                            text: "10:42:0" + index
+                            // Lấy dữ liệu từ vai trò 'time' của model
+                            text: model.time
                             font.family: "Manrope"
                             font.pixelSize: 10
                             color: "#94a3b8"
@@ -88,7 +96,8 @@ Rectangle {
                     }
 
                     Text {
-                        text: index === 0 ? "Shift Tile 4 Right" : "Previous Movement"
+                        // Lấy dữ liệu từ vai trò 'action' của model
+                        text: model.action
                         font.family: "Inter"
                         font.pixelSize: 14
                         font.weight: index === 0 ? Font.Bold : Font.Normal
@@ -98,21 +107,45 @@ Rectangle {
             }
         }
 
-        // Nút Export (Luôn nằm ở dưới cùng)
-        Button {
-            Layout.fillWidth: true
-            height: 40
-            contentItem: Row {
-                spacing: 8
-                anchors.centerIn: parent
-                MaterialIcon { iconCode: "\uf090"; font.pixelSize: 16; color: "#475569" }
-                Text { text: "Export Log"; font.family: "Inter"; font.weight: Font.Bold; color: "#475569" }
+        // Button {
+        //     Layout.fillWidth: true
+        //     height: 40
+        //     onClicked: {
+        //         // Placeholder cho chức năng xuất log
+        //         console.log("Exporting " + realLogModel.count + " log entries...")
+        //     }
+        //     contentItem: Row {
+        //         spacing: 8
+        //         anchors.centerIn: parent
+        //         MaterialIcon { iconCode: "\uf090"; font.pixelSize: 16; color: "#475569" }
+        //         Text { text: "Export Log"; font.family: "Inter"; font.weight: Font.Bold; color: "#475569" }
+        //     }
+        //     background: Rectangle {
+        //         radius: 10
+        //         border.color: "#e2e8f0"
+        //         color: parent.hovered ? "#f8fafc" : "white"
+        //     }
+        // }
+    }
+
+    // 3. Kết nối với tín hiệu từ Python để cập nhật Log
+    Connections {
+        target: Backend
+
+        // Khi bắt đầu giải mới, xóa sạch log cũ
+        function onPuzzleModelChanged() {
+            if (Backend.totalSteps === 0) {
+                realLogModel.clear()
             }
-            background: Rectangle {
-                radius: 10
-                border.color: "#e2e8f0"
-                color: parent.hovered ? "#f8fafc" : "white"
-            }
+        }
+
+        // Tín hiệu mới (cần thêm vào bridge.py) để đẩy log mới vào đầu danh sách
+        function onNewLogEntry(step, action, time) {
+            realLogModel.insert(0, {
+                "step": step,
+                "action": action,
+                "time": time
+            })
         }
     }
 }

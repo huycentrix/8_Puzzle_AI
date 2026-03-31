@@ -7,7 +7,6 @@ Rectangle {
     width: 1440
     height: 810
     color: "#f8f9ff"
-
     RowLayout {
         id: mainLayout
         anchors.fill: parent
@@ -21,39 +20,25 @@ Rectangle {
             Layout.fillHeight: true
             color: "#eff4ff"
             ColumnLayout {
-
                 anchors.fill: parent
+                anchors.margins: 19
+                spacing: 8
 
-                anchors.margins: 19 // 25 * 0.75
-
-                spacing: 8 // 10 * 0.75
-
+                // SideButton {
+                //     Layout.fillWidth: true
+                //     text: "Algorithm"
+                //     iconCode: "\ue871"
+                // }
                 SideButton {
-
                     Layout.fillWidth: true
-
-                    text: "Algorithm"
-
-                    iconCode: "\ue871"
-                }
-
-                SideButton {
-
-                    Layout.fillWidth: true
-
                     text: "Puzzle Setup"
-
                     iconCode: "\uf1b4"
-
                     isActive: true
                 }
 
                 SideButton {
-
                     Layout.fillWidth: true
-
-                    text: "Execution"
-
+                    text: "Search Tree"
                     iconCode: "\ue037"
                 }
 
@@ -67,7 +52,7 @@ Rectangle {
         // --- CỘT 1: Config & Metrics (Đã thu hẹp xuống 210) ---
         ColumnLayout {
             Layout.leftMargin: 30
-            Layout.preferredWidth: 210 // Giảm từ 240 xuống 210
+            Layout.preferredWidth: 210
             Layout.minimumWidth: 210
             Layout.fillHeight: true
             Layout.topMargin: 30
@@ -75,6 +60,7 @@ Rectangle {
             spacing: 20
 
             ConfigPanel {
+                id: configPanel
                 Layout.fillWidth: true
             }
             MetricsPanel {
@@ -103,13 +89,14 @@ Rectangle {
 
             PuzzleGrid {
                 id: mainGrid
-                // Cập nhật kích thước gợi ý mới
                 implicitWidth: 468
                 implicitHeight: 468
                 Layout.alignment: Qt.AlignHCenter
             }
 
             ControlPanel {
+                id: ctrlPanel
+                strategyName: configPanel.selectedStrategy
                 implicitWidth: 540
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 15

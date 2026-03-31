@@ -52,70 +52,51 @@ class IDAStarSearch(BaseSearch):
         return result
 
     def dfs_contour(self, node, f_limit, path, result):
-        """
-        Hàm đệ quy thực hiện tìm kiếm theo chiều sâu giới hạn bởi f_limit.
-        Trả về: (node_đích, f_ngưỡng_mới)
-        """
-        # Nếu f của node hiện tại vượt quá ngưỡng cho phép, dừng nhánh này 
-        # và trả về f để làm căn cứ cập nhật f_limit mới 
         if node.f > f_limit:
             return None, node.f
     
-        # Kiểm tra trạng thái đích
         if node.state == self.goal_state:
-            # Lưu bước cuối cùng vào danh sách steps để hiển thị 
             result.steps.append({
                 "current": node.state,
                 "g": node.g,
                 "h": node.h,
                 "f": node.f,
                 "f_limit": f_limit,
+                "action": node.action, # Thêm action cho Log
                 "frontier": [],
                 "is_goal": True
             })
             return node, f_limit
 
-        # Giá trị nhỏ nhất trong số các node bị vượt ngưỡng ở nhánh này
         min_limit = float('inf')
-    
-        # Mở rộng các trạng thái kế tiếp (successors)
         successors = []
-        for state in self.puzzle.get_neighbors(node.state):
+        
+        # Sửa đổi: include_actions=True và unpack action
+        for state, action in self.puzzle.get_neighbors(node.state, include_actions=True):
             h_val = self.puzzle.heuristic(state)
-            # Tạo node con với chi phí g tăng thêm 1 
-            child_node = Node(state, node, cost=node.g + 1, heuristic=h_val)
+            # Truyền action vào Node
+            child_node = Node(state, node, action=action, cost=node.g + 1, heuristic=h_val)
             successors.append(child_node)
 
-        # Lưu thông tin bước hiện tại phục vụ yêu cầu GUI và so sánh 
         result.steps.append({
             "current": node.state,
             "g": node.g,
             "h": node.h,
             "f": node.f,
             "f_limit": f_limit,
-            # Frontier ở đây là danh sách các node con của node hiện tại
+            "action": node.action, # Thêm action cho Log
             "frontier": [{"state": n.state, "g": n.g, "h": n.h, "f": n.f} for n in successors],
             "is_goal": False
         })
 
-        # Duyệt qua từng node con theo phong cách DFS
         for child in successors:
-            # Kiểm tra tránh quay lại trạng thái đã nằm trong đường dẫn hiện tại (chu trình)
             if child.state not in path:
-                path.add(child.state) # Đánh dấu đã thăm trên nhánh này
-            
-                # Gọi đệ quy xuống sâu hơn
+                path.add(child.state)
                 res, new_limit = self.dfs_contour(child, f_limit, path, result)
-            
-                # Nếu tìm thấy đích ở nhánh con, trả về ngay lập tức
                 if res is not None:
                     return res, f_limit
-            
-                # Cập nhật giá trị ngưỡng nhỏ nhất cho lần lặp IDA* tiếp theo
                 if new_limit < min_limit:
                     min_limit = new_limit
-            
-                # Quay lui (Backtrack): Xóa trạng thái khỏi đường dẫn để các nhánh khác có thể dùng lại
                 path.remove(child.state) 
 
         return None, min_limit

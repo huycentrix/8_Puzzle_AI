@@ -35,45 +35,41 @@ class IDDFSearch(BaseSearch):
         return result
 
     def dls(self, node, limit, path, result, current_iteration):
-        """
-        Depth-Limited Search (DLS): return node_dich hoac none, is_cutoff?
-        """
         result.explored_nodes.append(node.state)
         
-        #tim duoc node_dich
         if node.state == self.goal_state:
             result.steps.append({
                 "current": node.state,
                 "limit": limit,
                 "iteration": current_iteration,
+                "action": node.action, # Thêm action cho Log
                 "frontier": [],
                 "is_goal": True
             })
             return node, False
 
-        #da limit nhung chua tim ra 
         if limit <= 0:
             return None, True
 
         cutoff_occurred = False
         successors = []
         
-        #lay state cho cac node con
-        for next_state in self.puzzle.get_neighbors(node.state):
+        # Sửa đổi: include_actions=True và unpack action
+        for next_state, action in self.puzzle.get_neighbors(node.state, include_actions=True):
             if next_state not in path:
-                child = Node(state=next_state, parent=node, cost=node.g + 1)
+                # Truyền action vào Node
+                child = Node(state=next_state, parent=node, action=action, cost=node.g + 1)
                 successors.append(child)
 
-        #luu buoc chay cho GUI
         result.steps.append({
             "current": node.state,
             "limit": limit,
             "iteration": current_iteration,
+            "action": node.action, # Thêm action cho Log
             "frontier": [{"state": n.state} for n in successors],
             "is_goal": False
         })
 
-        #de quy
         for child in successors:
             path.add(child.state)
             found, shifted_cutoff = self.dls(child, limit - 1, path, result, current_iteration)
@@ -81,7 +77,6 @@ class IDDFSearch(BaseSearch):
                 return found, False
             if shifted_cutoff:
                 cutoff_occurred = True
-            #backtrack
             path.remove(child.state) 
 
-        return None, cutoff_occurred     
+        return None, cutoff_occurred

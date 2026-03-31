@@ -39,6 +39,7 @@ class DFS(BaseSearch):
                 result.steps.append({
                     "current": current.state,
                     "cost": current.g,
+                    "action": current.action, # Thêm action để hiển thị Log
                     "frontier": [],
                     "is_goal": True
                 })
@@ -47,18 +48,15 @@ class DFS(BaseSearch):
                 break
 
             # Sinh các trạng thái láng giềng.
-            # Dùng reversed() để khi đẩy vào Stack, các hành động ưu tiên (ví dụ UP, LEFT) 
-            # sẽ nằm ở đỉnh Stack và được pop ra trước.
-            neighbors = self.puzzle.get_neighbors(current.state)
-            for state in reversed(neighbors):
+            neighbors = self.puzzle.get_neighbors(current.state, include_actions=True)
+            for state, action in reversed(neighbors):
                 if state not in visited:
-                    neighbor = Node(state, current, cost=current.g + 1)
+                    neighbor = Node(state, current, action=action, cost=current.g + 1)
                     frontier.append(neighbor)
-
-            # LƯU DỮ LIỆU TỪNG BƯỚC phục vụ GUI / Video Demo
             result.steps.append({
                 "current": current.state,
                 "cost": current.g,
+                "action": current.action, # Thêm action để hiển thị Log
                 "frontier": [{"state": node.state, "cost": node.g} for node in frontier],
                 "is_goal": False
             })

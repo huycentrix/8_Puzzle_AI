@@ -1,3 +1,4 @@
+# algorithms/astar.py
 import heapq
 import time
 from core.search_base import BaseSearch, SearchResult
@@ -46,6 +47,7 @@ class AStarSearch(BaseSearch):
                     "g": current.g,
                     "h": current.h,
                     "f": current.f,
+                    "action": current.action, # Thêm action để hiển thị Log
                     "frontier": [],
                     "is_goal": True
                 })
@@ -54,7 +56,8 @@ class AStarSearch(BaseSearch):
                 break
             
             # Expand neighbours
-            for state in self.puzzle.get_neighbors(current.state):
+            # Sửa đổi: include_actions=True và unpack thêm biến action
+            for state, action in self.puzzle.get_neighbors(current.state, include_actions=True):
                 # g_new: actual cost of reaching neighborly status
                 # Cost = 1
                 g_new = current.g + 1
@@ -66,6 +69,7 @@ class AStarSearch(BaseSearch):
                     neighbor = Node(
                         state=state,
                         parent=current,
+                        action=action,             # Lưu hành động vào Node
                         cost=g_new,                # g(neighbor)
                         heuristic=h_new            # h(neighbor)
                     )
@@ -78,6 +82,7 @@ class AStarSearch(BaseSearch):
                 "g": current.g,
                 "h": current.h,
                 "f": current.f,
+                "action": current.action, # Thêm action để hiển thị Log
                 "frontier": [
                     {"state": node.state, "g": node.g, "h": node.h, "f": node.f}
                     for node in frontier

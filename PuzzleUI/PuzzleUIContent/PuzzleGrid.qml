@@ -8,7 +8,7 @@ Item {
     // Kích thước tổng thể mới (390 * 1.2)
     width: 468; height: 468
 
-    property var puzzleModel: [1, 2, 3, 4, 0, 5, 7, 8, 6]
+    property var puzzleModel: Backend.puzzleModel
 
     // Các thông số kích thước đã nhân tỉ lệ 1.2
     readonly property int tileSize: 131 // (109 * 1.2)

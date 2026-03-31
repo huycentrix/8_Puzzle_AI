@@ -39,6 +39,7 @@ class BFS(BaseSearch):
                 result.steps.append({
                     "current": current.state,
                     "cost": current.g,
+                    "action": current.action, # Thêm action để hiển thị Log
                     "frontier": [],
                     "is_goal": True
                 })
@@ -47,18 +48,20 @@ class BFS(BaseSearch):
                 break
 
             # Duyệt qua các trạng thái láng giềng
-            for state in self.puzzle.get_neighbors(current.state):
+            # Sửa đổi: include_actions=True và unpack thêm biến action
+            for state, action in self.puzzle.get_neighbors(current.state, include_actions=True):
                 if state not in explored:
                     # Đánh dấu đã duyệt ngay khi sinh ra để giảm tải cho Frontier
                     explored.add(state)
                     # Tạo node con với chi phí tăng lên 1 (mỗi bước đi tốn 1 cost)
-                    neighbor = Node(state, current, cost=current.g + 1)
+                    neighbor = Node(state, current, action=action, cost=current.g + 1)
                     frontier.append(neighbor)
 
             # LƯU DỮ LIỆU TỪNG BƯỚC phục vụ GUI / Video Demo
             result.steps.append({
                 "current": current.state,
                 "cost": current.g,
+                "action": current.action, # Thêm action để hiển thị Log
                 # Lưu lại trạng thái của Frontier.
                 "frontier": [{"state": node.state, "cost": node.g} for node in frontier],
                 "is_goal": False

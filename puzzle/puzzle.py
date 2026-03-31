@@ -8,34 +8,37 @@ class Puzzle:
         # Lưu trữ trạng thái đích để so sánh và tính toán khoảng cách
         self.goal = goal_state
 
-    def get_neighbors(self, state):
-        """
-        Tìm tất cả các trạng thái có thể đạt được từ trạng thái hiện tại
-        bằng cách di chuyển ô trống (số 0) lên, xuống, trái, phải.
-        """
+    def get_neighbors(self, state, include_actions=False):
         neighbors = []
+        x, y = 0, 0
 
-        # Bước 1: Xác định tọa độ (x, y) của ô trống (giá trị 0) trong lưới 3x3
+        # Xác định tọa độ ô trống
         for i in range(3):
             for j in range(3):
                 if state[i][j] == 0:
                     x, y = i, j
+        moves = [
+            (x-1, y, "Move Up"), 
+            (x+1, y, "Move Down"), 
+            (x, y-1, "Move Left"), 
+            (x, y+1, "Move Right")
+        ]
 
-        # Bước 2: Liệt kê các hướng di chuyển có thể (Lên, Xuống, Trái, Phải)
-        moves = [(x-1, y), (x+1, y), (x, y-1), (x, y+1)]
-
-        for nx, ny in moves:
-            # Kiểm tra xem tọa độ mới có nằm trong phạm vi lưới 3x3 không
+        for nx, ny, action_label in moves:
             if 0 <= nx < 3 and 0 <= ny < 3:
-                # Tạo bản sao của trạng thái hiện tại (chuyển tuple sang list để chỉnh sửa)
                 new_state = [list(row) for row in state]
+                tile_value = new_state[nx][ny]
                 
-                # Hoán đổi vị trí của ô trống với ô số ở vị trí mới
+                # Hoán đổi vị trí
                 new_state[x][y], new_state[nx][ny] = new_state[nx][ny], new_state[x][y]
-                
-                # Chuyển ngược lại thành tuple của tuple để có thể băm (hashable) 
-                # và đưa vào tập hợp 'visited' hoặc 'path'.
-                neighbors.append(tuple(tuple(r) for r in new_state))
+                final_state = tuple(tuple(r) for r in new_state)
+
+                if include_actions:
+                    # Trả về kèm hành động nếu yêu cầu
+                    neighbors.append((final_state, f"{action_label} (Tile {tile_value})"))
+                else:
+                    # Trả về chỉ trạng thái (giống hệt hàm cũ)
+                    neighbors.append(final_state)
 
         return neighbors
 

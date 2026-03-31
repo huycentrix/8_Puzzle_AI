@@ -12,7 +12,6 @@ class UniformCostSearch(BaseSearch):
         result = SearchResult()
         start_time = time.time()
 
-        # Build the start node
         start_node = Node(
             state=self.start_state,
             parent=None,
@@ -21,19 +20,17 @@ class UniformCostSearch(BaseSearch):
 
         frontier = []
         heapq.heappush(frontier, start_node)
-
         visited = {}
 
         while frontier:
-            # Always pick the node with the smallest g
             current = heapq.heappop(frontier)
             result.explored_nodes.append(current.state)
 
-            # Goal test
             if current.state == self.goal_state:
                 result.steps.append({
                     "current": current.state,
                     "g": current.g,
+                    "action": current.action, # Thêm action cho Log
                     "frontier": [],
                     "is_goal": True
                 })
@@ -41,37 +38,30 @@ class UniformCostSearch(BaseSearch):
                 result.success = True
                 break
                 
-            # Lazy-deletion guard
-            # Skip any stale copy whose cost is higher than what we've recorded.
             if current.state in visited and visited[current.state] < current.g:
                 continue
 
-            # Mark this state as settled at the current (cheapest known) cost
             visited[current.state] = current.g
 
-            # Expand neighbours
-            for state in self.puzzle.get_neighbors(current.state):
+            # Sửa đổi: include_actions=True và unpack thêm biến action
+            for state, action in self.puzzle.get_neighbors(current.state, include_actions=True):
+                step_cost = 1
+                new_g = current.g + step_cost
 
-                step_cost = 1  # every tile move costs 1
-                new_g = current.g + step_cost   # total cost to reach child
-
-                # Only push if this path is strictly cheaper than any known path
                 if state not in visited or new_g < visited.get(state, float('inf')):
                     neighbor = Node(
                         state=state,
                         parent=current,
-                        cost=new_g          # g is the only ordering key
+                        action=action, # Truyền action vào Node
+                        cost=new_g
                     )
                     heapq.heappush(frontier, neighbor)
 
-            # Save step snapshot for visualisation
             result.steps.append({
                 "current": current.state,
                 "g": current.g,
-                "frontier": [
-                    {"state": node.state, "g": node.g}
-                    for node in frontier
-                ],
+                "action": current.action, # Thêm action cho Log
+                "frontier": [{"state": node.state, "g": node.g} for node in frontier],
                 "is_goal": False
             })
         

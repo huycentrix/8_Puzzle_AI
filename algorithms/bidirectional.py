@@ -57,13 +57,15 @@ class BidirectionalSearch(BaseSearch):
         result.steps.append({
             "current": current.state,
             "direction": direction,
+            "action": current.action, # Thêm action để hiển thị Log
             "is_goal": False
         })        
 
-        for next_state in self.puzzle.get_neighbors(current.state): #lay state frontier
+        # Sửa đổi: include_actions=True và unpack thêm biến action
+        for next_state, action in self.puzzle.get_neighbors(current.state, include_actions=True): 
             if next_state not in visited_mine:
                 #tao node moi, luu visited
-                new_node = Node(state=next_state, parent=current, cost=current.g + 1)
+                new_node = Node(state=next_state, parent=current, action=action, cost=current.g + 1)
                 visited_mine[next_state] = new_node
                 queue.append(new_node)
 

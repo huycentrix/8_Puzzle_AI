@@ -4,8 +4,9 @@ import QtQuick.Layouts
 
 Rectangle {
     id: root
+    property alias selectedStrategy: strategyCombo.currentText
     Layout.fillWidth: true
-    implicitHeight: 420 // Tăng chiều cao để chứa đủ các tùy chọn
+    implicitHeight: 300 // Tăng chiều cao để chứa đủ các tùy chọn
     color: "#eff4ff"
     radius: 16
 
@@ -41,7 +42,16 @@ Rectangle {
             ComboBox {
                 id: strategyCombo
                 Layout.fillWidth: true
-                model: ["A* Search", "Breadth-First Search", "Depth-First Search"]
+                model: [
+                        "A* Search",
+                        "Breadth-First Search",
+                        "Depth-First Search",
+                        "Uniform Cost Search",
+                        "Greedy Search",
+                        "IDDFS",
+                        "IDA* Search",
+                        "Bidirectional Search"
+                    ]
 
                 // Tùy chỉnh phần hiển thị văn bản khi đóng
                 contentItem: Text {
@@ -148,8 +158,8 @@ Rectangle {
             }
 
             StyledRadioButton { text: "Manhattan Distance"; checked: true }
-            StyledRadioButton { text: "Misplaced Tiles" }
-            StyledRadioButton { text: "Euclidean Distance" }
+            // StyledRadioButton { text: "Misplaced Tiles" }
+            // StyledRadioButton { text: "Euclidean Distance" }
         }
 
         Item { Layout.fillHeight: true } // Đẩy nội dung lên trên
