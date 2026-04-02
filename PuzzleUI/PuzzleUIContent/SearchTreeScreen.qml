@@ -21,6 +21,7 @@ Rectangle {
     property string currentNodeId: ""
     property int lastIdaIteration: -1
     property real lastIdaFLimit: -1
+    property int lastTreeIteration: -1
     property bool showUnsolvableBanner: false
     property string unsolvableMessage: ""
     property bool currentStateSolvable: true
@@ -56,19 +57,8 @@ Rectangle {
         logModel.insert(0, { kind: kind, text: text, time: new Date().toLocaleTimeString(Qt.locale(), "hh:mm:ss") })
     }
     function resetVisualization() {
-        nodeModel.clear()
-        edgeModel.clear()
+        resetTreeScene()
         logModel.clear()
-        nodeLookup = ({})
-        treeMinX = 1e9
-        treeMaxX = -1e9
-        treeMinY = 1e9
-        treeMaxY = -1e9
-        treeContentWidth = 5200
-        treeContentHeight = 12000
-        currentNodeId = ""
-        lastIdaIteration = -1
-        lastIdaFLimit = -1
         showUnsolvableBanner = false
         unsolvableMessage = ""
         previewState = cloneState(startState)
@@ -80,6 +70,21 @@ Rectangle {
         frontierPeakText = "0"
         solutionDepthText = "0"
         currentFrontierText = "0"
+    }
+    function resetTreeScene() {
+        nodeModel.clear()
+        edgeModel.clear()
+        nodeLookup = ({})
+        treeMinX = 1e9
+        treeMaxX = -1e9
+        treeMinY = 1e9
+        treeMaxY = -1e9
+        treeContentWidth = 5200
+        treeContentHeight = 12000
+        currentNodeId = ""
+        lastIdaIteration = -1
+        lastIdaFLimit = -1
+        lastTreeIteration = -1
         treeCanvas.requestPaint()
     }
     function updateTreeBounds(nodeInfo) {
@@ -615,6 +620,15 @@ Rectangle {
         }
 
         function onStepUpdated(stepData) {
+            const isIterativeAlgorithm = algorithmBox.currentText === "IDDFS" || algorithmBox.currentText === "IDA* Search"
+            if (isIterativeAlgorithm && stepData.meta.iteration !== undefined && stepData.meta.iteration !== root.lastTreeIteration) {
+                if (root.lastTreeIteration !== -1) {
+                    appendLog("ITERATION", algorithmBox.currentText + " moved to iteration " + stepData.meta.iteration + ".")
+                }
+                root.resetTreeScene()
+                root.lastTreeIteration = stepData.meta.iteration
+            }
+
             if (currentNodeId !== "") {
                 const previousIndex = nodeIndexById(currentNodeId)
                 if (previousIndex !== -1 && nodeModel.get(previousIndex).nodeStatus === "current") {

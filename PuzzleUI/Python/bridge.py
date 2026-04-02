@@ -55,9 +55,13 @@ class PuzzleBridge(QObject):
         self.all_steps = []
         self.path_ids = []
         self.current_step_idx = 0
+        self.reset_tree_layout()
+        self.summary = {}
+        self.current_visual_iteration = None
+
+    def reset_tree_layout(self):
         self.node_positions = {}
         self.level_counts = {}
-        self.summary = {}
 
     @Property(list, notify=puzzleModelChanged)
     def puzzleModel(self):
@@ -310,6 +314,8 @@ class PuzzleBridge(QObject):
         self.all_steps = payload["steps"]
         self.summary = payload["summary"]
         self.path_ids = self.summary["pathIds"]
+        self.current_visual_iteration = None
+        self.reset_tree_layout()
         if self.all_steps:
             root_uid = str(self.all_steps[0]["current_node"]["uid"])
             self.node_positions[root_uid] = (self.canvas_width // 2, 90)
@@ -334,6 +340,18 @@ class PuzzleBridge(QObject):
             return
 
         step = self.all_steps[self.current_step_idx]
+        step_iteration = step.get("iteration", None)
+        if (
+            self.summary.get("algorithm") in {"IDDFS", "IDA* Search"}
+            and step_iteration != self.current_visual_iteration
+        ):
+            self.current_visual_iteration = step_iteration
+            self.reset_tree_layout()
+            root_uid = str(step["current_node"]["uid"])
+            if step["current_node"].get("depth", 0) == 0:
+                self.node_positions[root_uid] = (self.canvas_width // 2, 90)
+            self.level_counts[0] = 1
+
         parent_id = ""
         if step["current_node"].get("parent_uid") is not None:
             parent_id = str(step["current_node"]["parent_uid"])
