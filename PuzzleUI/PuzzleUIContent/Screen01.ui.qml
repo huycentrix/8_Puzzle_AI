@@ -4,6 +4,8 @@ import QtQuick.Controls
 
 Rectangle {
     id: screen
+    property string currentMode: "animation"
+    signal requestModeChange(string mode)
     width: 1440
     height: 810
     color: "#f8f9ff"
@@ -33,13 +35,16 @@ Rectangle {
                     Layout.fillWidth: true
                     text: "Puzzle Setup"
                     iconCode: "\uf1b4"
-                    isActive: true
+                    isActive: screen.currentMode === "animation"
+                    onClicked: screen.requestModeChange("animation")
                 }
 
                 SideButton {
                     Layout.fillWidth: true
                     text: "Search Tree"
                     iconCode: "\ue037"
+                    isActive: screen.currentMode === "tree"
+                    onClicked: screen.requestModeChange("tree")
                 }
 
                 Item {

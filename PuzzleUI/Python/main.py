@@ -32,6 +32,7 @@ def main():
     
     # Đăng ký Backend cho QML
     engine.rootContext().setContextProperty("Backend", bridge)
+    engine.rootContext().setContextProperty("backend", bridge)
     
     # Load Font
     font_path = UI_DIR / "PuzzleUIContent" / "fonts" / "MaterialIconsOutlined-Regular.otf"

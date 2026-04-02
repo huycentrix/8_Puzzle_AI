@@ -1,7 +1,12 @@
 import QtQuick
 
 Window {
-    width: 1440; height: 810; visible: true
+    id: root
+    width: 1600
+    height: 940
+    visible: true
+    minimumWidth: 1280
+    minimumHeight: 760
     title: "PuzzleArchitect"
 
     FontLoader {
@@ -9,5 +14,28 @@ Window {
         source: "fonts/MaterialIconsOutlined-Regular.otf"
     }
 
-    Screen01 { anchors.fill: parent }
+    property string currentMode: "animation"
+
+    Loader {
+        anchors.fill: parent
+        sourceComponent: root.currentMode === "tree" ? treeMode : animationMode
+    }
+
+    Component {
+        id: animationMode
+        AnimationScreen {
+            anchors.fill: parent
+            currentMode: root.currentMode
+            onRequestModeChange: function(mode) { root.currentMode = mode }
+        }
+    }
+
+    Component {
+        id: treeMode
+        SearchTreeScreen {
+            anchors.fill: parent
+            currentMode: root.currentMode
+            onRequestModeChange: function(mode) { root.currentMode = mode }
+        }
+    }
 }

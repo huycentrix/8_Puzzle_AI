@@ -5,8 +5,10 @@ import QtQuick.Layouts
 Rectangle {
     id: root
     property alias selectedStrategy: strategyCombo.currentText
+    property string selectedHeuristic: heuristicGroup.checkedButton ? heuristicGroup.checkedButton.text : "Manhattan Distance"
+
     Layout.fillWidth: true
-    implicitHeight: 300 // Tăng chiều cao để chứa đủ các tùy chọn
+    implicitHeight: 340
     color: "#eff4ff"
     radius: 16
 
@@ -15,7 +17,6 @@ Rectangle {
         anchors.margins: 24
         spacing: 20
 
-        // Tiêu đề chính
         Text {
             text: "Algorithm Configuration"
             font.family: "Space Grotesk"
@@ -25,7 +26,6 @@ Rectangle {
             Layout.bottomMargin: 5
         }
 
-        // --- SECTION: SEARCH STRATEGY ---
         ColumnLayout {
             spacing: 12
             Layout.fillWidth: true
@@ -43,17 +43,16 @@ Rectangle {
                 id: strategyCombo
                 Layout.fillWidth: true
                 model: [
-                        "A* Search",
-                        "Breadth-First Search",
-                        "Depth-First Search",
-                        "Uniform Cost Search",
-                        "Greedy Search",
-                        "IDDFS",
-                        "IDA* Search",
-                        "Bidirectional Search"
-                    ]
+                    "A* Search",
+                    "Breadth-First Search",
+                    "Depth-First Search",
+                    "Uniform Cost Search",
+                    "Greedy Search",
+                    "IDDFS",
+                    "IDA* Search",
+                    "Bidirectional Search"
+                ]
 
-                // Tùy chỉnh phần hiển thị văn bản khi đóng
                 contentItem: Text {
                     leftPadding: 16
                     text: strategyCombo.displayText
@@ -63,25 +62,12 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                 }
 
-                // Tùy chỉnh nền (Hộp trắng bo góc)
                 background: Rectangle {
                     implicitHeight: 52
                     color: "white"
                     radius: 8
-
-                    // Icon mũi tên xuống (giống trong ảnh)
-                    // Text {
-                    //     anchors.right: parent.right
-                    //     anchors.rightMargin: 16
-                    //     anchors.verticalCenter: parent.verticalCenter
-                    //     text: "\ue5cf" // expand_more
-                    //     font.family: "Material Icons"
-                    //     font.pixelSize: 24
-                    //     color: "#727783"
-                    // }
                 }
 
-                // Tùy chỉnh danh sách thả xuống (Popup)
                 popup: Popup {
                     y: strategyCombo.height + 5
                     width: strategyCombo.width
@@ -103,9 +89,8 @@ Rectangle {
             }
         }
 
-        // --- SECTION: HEURISTIC FUNCTION ---
         ColumnLayout {
-            spacing: 15
+            spacing: 12
             Layout.fillWidth: true
 
             Text {
@@ -117,10 +102,8 @@ Rectangle {
                 Layout.topMargin: 10
             }
 
-            // Group để đảm bảo chỉ chọn được 1 radio button
             ButtonGroup { id: heuristicGroup }
 
-            // Thành phần RadioButton tùy chỉnh
             component StyledRadioButton : RadioButton {
                 id: control
                 font.family: "Inter"
@@ -135,7 +118,6 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                 }
 
-                // Vẽ vòng tròn theo phong cách trong ảnh
                 indicator: Rectangle {
                     implicitWidth: 24
                     implicitHeight: 24
@@ -143,12 +125,12 @@ Rectangle {
                     y: parent.height / 2 - height / 2
                     radius: 12
                     border.color: control.checked ? "#00488d" : "#727783"
-                    border.width: control.checked ? 7 : 2 // Độ dày viền tạo hiệu ứng vòng tròn xanh
+                    border.width: control.checked ? 7 : 2
                     color: "transparent"
 
-                    // Chấm trắng nhỏ ở giữa khi được chọn
                     Rectangle {
-                        width: 6; height: 6
+                        width: 6
+                        height: 6
                         anchors.centerIn: parent
                         radius: 3
                         color: "white"
@@ -158,10 +140,10 @@ Rectangle {
             }
 
             StyledRadioButton { text: "Manhattan Distance"; checked: true }
-            // StyledRadioButton { text: "Misplaced Tiles" }
-            // StyledRadioButton { text: "Euclidean Distance" }
+            StyledRadioButton { text: "Misplaced Tiles" }
+            StyledRadioButton { text: "Euclidean Distance" }
         }
 
-        Item { Layout.fillHeight: true } // Đẩy nội dung lên trên
+        Item { Layout.fillHeight: true }
     }
 }

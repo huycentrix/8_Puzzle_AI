@@ -52,7 +52,7 @@ Rectangle {
             }
 
             delegate: Rectangle {
-                width: logListView.width
+                width: Math.max(0, logListView.width - 18)
                 height: 72
                 radius: 12
                 // Bước mới nhất (index 0) sẽ có màu nền xanh nhạt
