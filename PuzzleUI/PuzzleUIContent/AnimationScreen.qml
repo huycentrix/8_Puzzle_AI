@@ -7,6 +7,7 @@ Rectangle {
     property string currentMode: "animation"
     signal requestModeChange(string mode)
     readonly property real boardScale: Math.max(0.78, Math.min(1.0, (height - 180) / 620))
+    readonly property var defaultStartState: [1, 2, 3, 4, 0, 5, 7, 8, 6]
     property real setupPanelWidth: width < 1500 ? 250 : 280
     property real executionLogWidth: width < 1500 ? 280 : 310
     width: 1440
@@ -72,6 +73,15 @@ Rectangle {
                     ConfigPanel {
                         id: configPanel
                         Layout.fillWidth: true
+                    }
+
+                    Button {
+                        Layout.fillWidth: true
+                        text: "Edit Start State"
+                        onClicked: {
+                            startStateDialog.currentState = mainGrid.puzzleModel.slice(0)
+                            startStateDialog.open()
+                        }
                     }
 
                     MetricsPanel {
@@ -187,6 +197,19 @@ Rectangle {
                 id: executionLog
                 anchors.fill: parent
             }
+        }
+    }
+
+    StartStateDialog {
+        id: startStateDialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        titleText: "Edit Start State"
+        defaultState: screen.defaultStartState
+        goalState: [1, 2, 3, 4, 5, 6, 7, 8, 0]
+
+        onApplied: function(state) {
+            Backend.set_start_state(state)
         }
     }
 }

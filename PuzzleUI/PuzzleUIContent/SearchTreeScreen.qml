@@ -8,6 +8,7 @@ Rectangle {
     signal requestModeChange(string mode)
 
     color: "#f4f7fb"
+    readonly property var defaultStartState: [1, 2, 3, 4, 0, 6, 7, 5, 8]
     property var startState: [1, 2, 3, 4, 0, 6, 7, 5, 8]
     property var goalState: [1, 2, 3, 4, 5, 6, 7, 8, 0]
     property var previewState: startState.slice(0)
@@ -29,6 +30,8 @@ Rectangle {
     property bool rightPanelCollapsed: false
     property real leftPanelWidth: 320
     property var nodeLookup: ({})
+    property var nodeIndexLookup: ({})
+    property var edgeLookup: ({})
     property real treeMinX: 1e9
     property real treeMaxX: -1e9
     property real treeMinY: 1e9
@@ -41,20 +44,12 @@ Rectangle {
     function cloneState(state) { return state.slice(0) }
     function refreshSolvableStatus() { currentStateSolvable = Backend.is_solvable_state(startState, goalState) }
     function nodeIndexById(nodeId) {
-        for (let i = 0; i < nodeModel.count; i += 1) {
-            if (nodeModel.get(i).nodeId === nodeId) return i
-        }
-        return -1
-    }
-    function edgeExists(parentId, childId) {
-        for (let i = 0; i < edgeModel.count; i += 1) {
-            const edge = edgeModel.get(i)
-            if (edge.parentId === parentId && edge.childId === childId) return true
-        }
-        return false
+        const index = nodeIndexLookup[nodeId]
+        return index === undefined ? -1 : index
     }
     function appendLog(kind, text) {
         logModel.insert(0, { kind: kind, text: text, time: new Date().toLocaleTimeString(Qt.locale(), "hh:mm:ss") })
+        while (logModel.count > 120) logModel.remove(logModel.count - 1)
     }
     function resetVisualization() {
         resetTreeScene()
@@ -75,6 +70,8 @@ Rectangle {
         nodeModel.clear()
         edgeModel.clear()
         nodeLookup = ({})
+        nodeIndexLookup = ({})
+        edgeLookup = ({})
         treeMinX = 1e9
         treeMaxX = -1e9
         treeMinY = 1e9
@@ -96,8 +93,9 @@ Rectangle {
         treeContentHeight = Math.max(2200, treeMaxY + 220)
     }
     function upsertNode(nodeInfo) {
-        const index = nodeIndexById(nodeInfo.id)
-        const parentId = index === -1 ? nodeInfo.parentId : nodeModel.get(index).parentId
+        const index = nodeIndexLookup[nodeInfo.id]
+        const hasNode = index !== undefined
+        const parentId = hasNode ? nodeModel.get(index).parentId : nodeInfo.parentId
         const payload = {
             nodeId: nodeInfo.id,
             parentId: parentId,
@@ -112,9 +110,16 @@ Rectangle {
         }
         nodeLookup[nodeInfo.id] = payload
         updateTreeBounds(nodeInfo)
-        if (index === -1) nodeModel.append(payload)
+        if (!hasNode) {
+            nodeModel.append(payload)
+            nodeIndexLookup[nodeInfo.id] = nodeModel.count - 1
+        }
         else for (const key in payload) nodeModel.setProperty(index, key, payload[key])
-        if (nodeInfo.parentId !== "" && !edgeExists(nodeInfo.parentId, nodeInfo.id)) edgeModel.append({ parentId: nodeInfo.parentId, childId: nodeInfo.id })
+        const edgeKey = nodeInfo.parentId + "->" + nodeInfo.id
+        if (nodeInfo.parentId !== "" && !edgeLookup[edgeKey]) {
+            edgeModel.append({ parentId: nodeInfo.parentId, childId: nodeInfo.id })
+            edgeLookup[edgeKey] = true
+        }
     }
     function fitTreeToViewport() {
         if (treeMaxX < treeMinX || treeMaxY < treeMinY) return
@@ -346,6 +351,15 @@ Rectangle {
                                 Text { text: "Start State"; font.pixelSize: 14; font.bold: true; color: "#334155" }
                                 BoardView { Layout.alignment: Qt.AlignHCenter; boardState: root.startState; editable: true }
 
+                                Button {
+                                    Layout.fillWidth: true
+                                    text: "Edit Start State"
+                                    onClicked: {
+                                        startStateDialog.currentState = root.startState.slice(0)
+                                        startStateDialog.open()
+                                    }
+                                }
+
                                 RowLayout {
                                     Layout.fillWidth: true
                                     Button {
@@ -364,7 +378,7 @@ Rectangle {
                                         Layout.fillWidth: true
                                         text: "Reset"
                                         onClicked: {
-                                            startState = [1, 2, 3, 4, 0, 5, 7, 8, 6]
+                                            startState = root.defaultStartState.slice(0)
                                             previewState = cloneState(startState)
                                             refreshSolvableStatus()
                                             showUnsolvableBanner = false
@@ -606,6 +620,24 @@ Rectangle {
         }
     }
 
+    StartStateDialog {
+        id: startStateDialog
+        parent: Overlay.overlay
+        anchors.centerIn: parent
+        titleText: "Edit Start State"
+        defaultState: root.defaultStartState
+        goalState: root.goalState
+
+        onApplied: function(state) {
+            root.startState = state
+            root.previewState = root.cloneState(state)
+            root.refreshSolvableStatus()
+            root.showUnsolvableBanner = false
+            root.unsolvableMessage = ""
+            root.statusText = "Ready"
+        }
+    }
+
     Component.onCompleted: {
         appendLog("INFO", "Ready to run 8-puzzle search.")
         refreshSolvableStatus()
@@ -667,14 +699,10 @@ Rectangle {
             exploredCountText = summary.exploredCount.toString()
             frontierPeakText = summary.frontierPeak.toString()
             solutionDepthText = summary.solutionDepth.toString()
-            const pathStateKeys = ({})
-            for (let i = 0; i < summary.pathIds.length; i += 1) pathStateKeys[summary.pathIds[i]] = true
-            for (let i = 0; i < summary.pathIds.length; i += 1) {
-                const idx = nodeIndexById(summary.pathIds[i])
+            const pathNodeIds = summary.pathNodeIds || []
+            for (let i = 0; i < pathNodeIds.length; i += 1) {
+                const idx = nodeIndexById(pathNodeIds[i])
                 if (idx !== -1) nodeModel.setProperty(idx, "nodeStatus", "path")
-            }
-            for (let i = 0; i < nodeModel.count; i += 1) {
-                if (pathStateKeys[nodeModel.get(i).stateKey]) nodeModel.setProperty(i, "nodeStatus", "path")
             }
             appendLog(summary.success ? "DONE" : "FAIL", summary.algorithm + " finished in " + summary.processingTimeMs + " ms with explored count " + summary.exploredCount + ".")
             if (summary.renderTruncated) appendLog("INFO", "Tree view was limited to " + summary.visualizedStepCount + " rendered steps to keep the UI responsive.")

@@ -45,7 +45,7 @@ class PuzzleBridge(QObject):
         self.level_height = 180
         self.level_start_x = 160
         self.level_spacing_x = 150
-        self.max_visualized_steps = 250
+        self.max_visualized_steps = 140
         self._tree_search_running = False
         self.treeSearchPrepared.connect(self._apply_prepared_tree_search)
         self.treeSearchFailed.connect(self._apply_tree_search_error)
@@ -88,6 +88,16 @@ class PuzzleBridge(QObject):
 
     def flatten_state(self, state):
         return [item for row in state for item in row]
+
+    def apply_puzzle_state(self, flat_state):
+        self.animation_timer.stop()
+        self._puzzle_model = list(flat_state)
+        self.puzzleModelChanged.emit()
+        self._total_steps = 0
+        self._nodes_expanded = 0
+        self._solution_depth = 0
+        self._processing_time = "0 ms"
+        self.metricsChanged.emit()
 
     def create_solver(self, method, start_state, goal_state, puzzle_logic):
         mapping = {
@@ -181,15 +191,14 @@ class PuzzleBridge(QObject):
 
     @Slot()
     def shufflePuzzle(self):
-        self.animation_timer.stop()
         goal_state = ((1, 2, 3), (4, 5, 6), (7, 8, 0))
-        self._puzzle_model = self.flatten_state(self.randomize_easy_state(goal_state))
-        self.puzzleModelChanged.emit()
-        self._total_steps = 0
-        self._nodes_expanded = 0
-        self._solution_depth = 0
-        self._processing_time = "0 ms"
-        self.metricsChanged.emit()
+        self.apply_puzzle_state(self.flatten_state(self.randomize_easy_state(goal_state)))
+
+    @Slot(list)
+    def set_start_state(self, state_list):
+        if len(state_list) != 9:
+            return
+        self.apply_puzzle_state(state_list)
 
     @Slot(list, int, result="QVariantList")
     def randomize_state(self, goal_list, moves=40):
@@ -293,6 +302,7 @@ class PuzzleBridge(QObject):
             "algorithm": method,
             "heuristic": heuristic_name,
             "pathIds": [self.state_key(self.flatten_state(state)) for state in result.path],
+            "pathNodeIds": [str(uid) for uid in result.path_node_uids],
             "pathCost": result.path_cost,
             "solutionDepth": max(0, len(result.path) - 1),
             "exploredCount": len(result.explored_nodes),
@@ -325,7 +335,7 @@ class PuzzleBridge(QObject):
             self.searchFinished.emit(self.summary)
             return
 
-        interval = max(80, int(1000 / max(float(self.summary["speed"]), 0.1)))
+        interval = max(120, int(1000 / max(float(self.summary["speed"]), 0.1)))
         self.timer.start(interval)
 
     @Slot(str)

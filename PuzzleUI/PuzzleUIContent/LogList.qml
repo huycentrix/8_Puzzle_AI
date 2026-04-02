@@ -146,6 +146,9 @@ Rectangle {
                 "action": action,
                 "time": time
             })
+            while (realLogModel.count > 120) {
+                realLogModel.remove(realLogModel.count - 1)
+            }
         }
     }
 }

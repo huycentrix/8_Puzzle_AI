@@ -5,6 +5,7 @@ from time import perf_counter
 class SearchResult:
     def __init__(self):
         self.path = []
+        self.path_node_uids = []
         self.explored_nodes = []
         self.path_cost = 0
         self.processing_time = 0.0
@@ -24,11 +25,13 @@ class BaseSearch(ABC):
 
     def extract_path(self, node):
         path = []
+        path_uids = []
         cost = node.g
         while node:
             path.append(node.state)
+            path_uids.append(node.uid)
             node = node.parent
-        return path[::-1], cost
+        return path[::-1], path_uids[::-1], cost
 
     def serialize_state(self, state):
         return [item for row in state for item in row]
@@ -70,7 +73,7 @@ class BaseSearch(ABC):
         result.steps.append(step)
 
     def mark_success(self, result, node):
-        result.path, result.path_cost = self.extract_path(node)
+        result.path, result.path_node_uids, result.path_cost = self.extract_path(node)
         result.success = True
 
     @abstractmethod
