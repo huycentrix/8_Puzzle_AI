@@ -1,5 +1,5 @@
 # Lab 1 - Search Algorithms
-GroupID: 1
+GroupID: 1 <br>
 Group Members:
 - Đoàn Thế Việt (24127590)
 - Võ Minh Huy (24127405)
@@ -23,47 +23,47 @@ This project implements and visualizes eight classic search algorithms for solvi
 - Solvability checking using inversion count algorithm.
 - Random puzzle generation with guaranteed solvability.
 ## 2. Directory structure
-8_Puzzle_AI/				
-├── PuzzleUI/				# Full QML interface and bridge source code
-│   ├── PuzzleUIContent			# UI components (.qml)
-│   │   ├── fonts
-│   │   ├── images
-│   │   ├── AnimationScreen.qml
-│   │   ├── App.qml
-│   │   ├── ConfigPanel.qml
-│   │   ├── ControlPanel.qml
-│   │   ├── LogList.qml
-│   │   ├── MaterialIcon.qml
-│   │   ├── MetricsPanel.qml
-│   │   ├── PuzzleGrid.qml
-│   │   ├── PuzzleNode.qml
-│   │   ├── SearchTreeScreen.qml
-│   │   ├── SideButton.qml
-│   │   ├── StartStateDialog.qml
-│   ├── Python				# main.py and bridge.py
-│   │   ├── bridge.py
-│   │   ├── main.py
-│   │   ├── pyproject.toml
-│   ├── qtquickcontrols2.conf
-├── algorithms/          			# Contains 8 search algorithms                                          
-│   ├── __init__.py
-│   ├── astar.py
-│   ├── bfs.py
-│   ├── bidirectional.py
-│   ├── dfs.py
-│   ├── greedy.py
-│   ├── idastar.py
-│   ├── iddfs.py
-│   ├── ucs.py
-├── core/						# Defines Node and BaseSearch class
-│   ├── __init__.py
-│   ├── node.py
-│   ├── search_base.py
-├── puzzle/					# Board logic and feasibility checking
-│   ├── __init__.py
-│   ├── puzzle.py
-├── .gitignore/
-└── README.md/
+8_Puzzle_AI/ <br>				
+├── PuzzleUI/				# Full QML interface and bridge source code <br>
+│   ├── PuzzleUIContent			# UI components (.qml) <br>
+│   │   ├── fonts <br>
+│   │   ├── images <br>
+│   │   ├── AnimationScreen.qml <br>
+│   │   ├── App.qml <br>
+│   │   ├── ConfigPanel.qml <br>
+│   │   ├── ControlPanel.qml <br>
+│   │   ├── LogList.qml <br>
+│   │   ├── MaterialIcon.qml <br>
+│   │   ├── MetricsPanel.qml <br>
+│   │   ├── PuzzleGrid.qml <br>
+│   │   ├── PuzzleNode.qml <br>
+│   │   ├── SearchTreeScreen.qml <br>
+│   │   ├── SideButton.qml <br>
+│   │   ├── StartStateDialog.qml <br>
+│   ├── Python				# main.py and bridge.py <br>
+│   │   ├── bridge.py <br>
+│   │   ├── main.py <br>
+│   │   ├── pyproject.toml <br>
+│   ├── qtquickcontrols2.conf <br>
+├── algorithms/          			# Contains 8 search algorithms <br>                                          
+│   ├── __init__.py <br>
+│   ├── astar.py <br>
+│   ├── bfs.py <br>
+│   ├── bidirectional.py <br>
+│   ├── dfs.py <br>
+│   ├── greedy.py <br>
+│   ├── idastar.py <br>
+│   ├── iddfs.py <br>
+│   ├── ucs.py <br>
+├── core/						# Defines Node and BaseSearch class <br>
+│   ├── __init__.py <br>
+│   ├── node.py <br>
+│   ├── search_base.py <br>
+├── puzzle/					# Board logic and feasibility checking <br>
+│   ├── __init__.py <br>
+│   ├── puzzle.py <br>
+├── .gitignore/ <br>
+└── README.md/ <br>
 ## 3. How to build and run
 ### 3.1. Requirements
 - PythoN (3.10 or later).
