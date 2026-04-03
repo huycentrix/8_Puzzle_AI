@@ -1,4 +1,4 @@
-# Lab 1: Search Algorithms
+# Lab 1 - Search Algorithms
 GroupID: 1
 Group Members:
 - Đoàn Thế Việt (24127590)
@@ -23,7 +23,7 @@ This project implements and visualizes eight classic search algorithms for solvi
 - Solvability checking using inversion count algorithm.
 - Random puzzle generation with guaranteed solvability.
 ## 2. Directory structure
-8_Puzzle_AI/					
+8_Puzzle_AI/				
 ├── PuzzleUI/				# Full QML interface and bridge source code
 │   ├── PuzzleUIContent			# UI components (.qml)
 │   │   ├── fonts
