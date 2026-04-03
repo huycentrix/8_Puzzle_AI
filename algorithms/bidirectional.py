@@ -49,13 +49,32 @@ class BidirectionalSearch(BaseSearch):
         self.record_step(result, current, queue, children, False, {"direction": direction})
         return None
 
+    # def combine_path(self, intersection_state, visited_start, visited_goal, result):
+    #     node_start = visited_start[intersection_state]
+    #     path_start, _ = self.extract_path(node_start)
+
+    #     node_goal = visited_goal[intersection_state]
+    #     path_goal, _ = self.extract_path(node_goal)
+
+    #     result.path = path_start + path_goal[::-1][1:]
+    #     result.path_cost = len(result.path) - 1
+    #     result.success = True
     def combine_path(self, intersection_state, visited_start, visited_goal, result):
         node_start = visited_start[intersection_state]
-        path_start, _ = self.extract_path(node_start)
-
         node_goal = visited_goal[intersection_state]
-        path_goal, _ = self.extract_path(node_goal)
 
-        result.path = path_start + path_goal[::-1][1:]
-        result.path_cost = len(result.path) - 1
-        result.success = True
+        prev = node_start
+
+        current = node_goal.parent
+
+        while current:
+            new_node = Node(
+                state=current.state,
+                parent=prev,
+                action=current.action,
+                cost=prev.g + 1
+            )
+            prev = new_node
+            current = current.parent
+
+        self.mark_success(result, prev)
